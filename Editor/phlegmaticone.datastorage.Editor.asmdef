@@ -1,0 +1,16 @@
+{
+    "name": "phlegmaticone.datastorage.Editor",
+    "rootNamespace": "PhlegmaticOne.DataStorage",
+    "references": [
+        "GUID:06ccb3088ca33d74c88b60da4cde367b"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
