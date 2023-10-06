@@ -55,9 +55,10 @@ namespace KeyedSemaphores
             return obj is RefCountedKeyedSemaphore<TKey> other && Equals(other);
         }
 
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(_key, _semaphore, _releaser, _refs);
+        public override int GetHashCode() {
+            return CombineHashCodes(
+                _key.GetHashCode(), _semaphore.GetHashCode(),
+                _releaser.GetHashCode(), _refs.GetHashCode());
         }
 
         public static bool operator ==(RefCountedKeyedSemaphore<TKey> left, RefCountedKeyedSemaphore<TKey> right)
@@ -124,6 +125,25 @@ namespace KeyedSemaphores
         public void Dispose()
         {
             _semaphore.Dispose();
+        }
+        
+        private static int CombineHashCodes(params int[] hashCodes)
+        {
+            int hash1 = (5381 << 16) + 5381;
+            int hash2 = hash1;
+
+            int i = 0;
+            foreach (var hashCode in hashCodes)
+            {
+                if (i % 2 == 0)
+                    hash1 = ((hash1 << 5) + hash1 + (hash1 >> 27)) ^ hashCode;
+                else
+                    hash2 = ((hash2 << 5) + hash2 + (hash2 >> 27)) ^ hashCode;
+
+                ++i;
+            }
+
+            return hash1 + (hash2 * 1566083941);
         }
     }
 }

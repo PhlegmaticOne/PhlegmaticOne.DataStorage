@@ -45,7 +45,7 @@ namespace PhlegmaticOne.DataStorage.Storage {
             var source = _sourcesContainer.GetSource<T>(operationType);
             var value = await source.ReadAsync(ct);
             var valueSource = new ValueSource<T>(this, value);
-            _valueSources.TryAdd(key, valueSource);
+            _valueSources.Add(key, valueSource);
             return valueSource;
         }
 
