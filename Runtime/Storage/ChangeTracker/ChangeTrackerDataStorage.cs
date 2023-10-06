@@ -1,9 +1,15 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using PhlegmaticOne.DataStorage.Infrastructure.Helpers;
 
 namespace PhlegmaticOne.DataStorage.Storage.ChangeTracker {
     public abstract class ChangeTrackerDataStorage : IChangeTracker {
+        protected class ChangeTrackerException : Exception {
+            public ChangeTrackerException(Exception innerException) :
+                base("Change tracker stopped working", innerException) { }
+        }
+        
         protected readonly ChangeTrackerConfiguration Configuration;
         private readonly DataStorage _dataStorage;
 
