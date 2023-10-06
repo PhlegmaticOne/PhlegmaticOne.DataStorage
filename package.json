@@ -5,7 +5,8 @@
   "description": "Data Storage",
   "unity": "2020.3",
   "dependencies": {
-    "com.unity.nuget.newtonsoft-json": "3.0.2"
+    "com.unity.nuget.newtonsoft-json": "3.0.2",
+    "com.google.firebase.app": "11.3.0"
   },
   "keywords": [
     "Data", "Storage", "DataStorage"
