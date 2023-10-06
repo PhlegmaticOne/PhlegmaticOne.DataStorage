@@ -1,11 +1,12 @@
 {
   "name": "com.phlegmaticone.datastorage",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "displayName": "Data Storage",
   "description": "Data Storage",
   "unity": "2020.3",
   "dependencies": {
-    "com.unity.nuget.newtonsoft-json": "3.0.2"
+    "com.unity.nuget.newtonsoft-json": "3.0.2",
+    "com.cysharp.unitask": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask"
   },
   "keywords": [
     "Data", "Storage", "DataStorage"

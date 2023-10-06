@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using PhlegmaticOne.DataStorage.Contracts;
 using PhlegmaticOne.DataStorage.DataSources.Base;
 using PhlegmaticOne.DataStorage.Infrastructure.Helpers;
 
@@ -13,7 +14,7 @@ namespace PhlegmaticOne.DataStorage.DataSources {
             _sources = new Dictionary<Type, IDataSource>();
         }
 
-        public DataSourceBase<T> Source<T>() {
+        public DataSourceBase<T> Source<T>() where T: class, IModel {
             if (_sources.TryGetValue(typeof(T), out var dataNode)) {
                 return (DataSourceBase<T>)dataNode;
             }
@@ -21,7 +22,7 @@ namespace PhlegmaticOne.DataStorage.DataSources {
             return CreateNewSource<T>();
         }
 
-        private DataSourceBase<T> CreateNewSource<T>() {
+        private DataSourceBase<T> CreateNewSource<T>() where T: class, IModel {
             var node = _dataSourceFactory.CreateDataSource<T>();
             _sources.Add(typeof(T), node);
             return node;

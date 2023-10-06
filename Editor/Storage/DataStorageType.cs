@@ -2,7 +2,6 @@
     public enum DataStorageType {
         InMemory = 0,
         PlayerPrefs = 1,
-        File = 2,
-        FirebaseDatabase = 3
+        File = 2
     }
 }

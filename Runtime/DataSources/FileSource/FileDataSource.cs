@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using PhlegmaticOne.DataStorage.Contracts;
 using PhlegmaticOne.DataStorage.DataSources.Base;
 using PhlegmaticOne.DataStorage.DataSources.FileSource.Options;
 using PhlegmaticOne.DataStorage.DataSources.FileSource.Serializers;
@@ -8,7 +9,7 @@ using PhlegmaticOne.DataStorage.Infrastructure.Helpers;
 using PhlegmaticOne.DataStorage.KeyResolvers.Base;
 
 namespace PhlegmaticOne.DataStorage.DataSources.FileSource {
-    internal sealed class FileDataSource<T> : DataSourceBase<T> {
+    internal sealed class FileDataSource<T> : DataSourceBase<T> where T: class, IModel {
         private readonly IFileSerializer _fileSerializer;
         private readonly IFileOptions _fileOptions;
         private readonly IKeyResolver _keyResolver;

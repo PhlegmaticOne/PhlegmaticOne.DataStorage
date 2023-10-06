@@ -1,5 +1,6 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
+using PhlegmaticOne.DataStorage.Contracts;
 using PhlegmaticOne.DataStorage.DataSources.Base;
 using PhlegmaticOne.DataStorage.DataSources.PlayerPrefsSource.Converters;
 using PhlegmaticOne.DataStorage.Infrastructure.Helpers;
@@ -7,7 +8,7 @@ using PhlegmaticOne.DataStorage.KeyResolvers.Base;
 using UnityEngine;
 
 namespace PhlegmaticOne.DataStorage.DataSources.PlayerPrefsSource {
-    internal sealed class PlayerPrefsDataSource<T> : DataSourceBase<T> {
+    internal sealed class PlayerPrefsDataSource<T> : DataSourceBase<T> where T: class, IModel {
         private readonly IEntityConverter _entityConverter;
         private readonly IKeyResolver _keyResolver;
 

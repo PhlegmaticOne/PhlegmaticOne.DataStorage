@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using PhlegmaticOne.DataStorage.Contracts;
 using PhlegmaticOne.DataStorage.DataSources;
 using PhlegmaticOne.DataStorage.DataSources.Base;
 using PhlegmaticOne.DataStorage.Infrastructure.Exceptions;
@@ -25,7 +26,7 @@ namespace PhlegmaticOne.DataStorage.Infrastructure {
             _defaultOperationType = defaultOperationType;
         }
         
-        public DataSourceBase<T> GetSource<T>(StorageOperationType operationType) {
+        public DataSourceBase<T> GetSource<T>(StorageOperationType operationType) where T: class, IModel {
             var type = operationType == StorageOperationType.Auto ? _defaultOperationType : operationType;
             EnsureStorageAvailable(type);
             var nodesSet = GetSourceSet(type);

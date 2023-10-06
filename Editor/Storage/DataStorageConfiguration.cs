@@ -2,6 +2,7 @@
 using PhlegmaticOne.DataStorage.Infrastructure.Internet;
 using PhlegmaticOne.DataStorage.Infrastructure.Internet.Base;
 using PhlegmaticOne.DataStorage.Storage.Base;
+using PhlegmaticOne.DataStorage.Storage.ChangeTracker;
 using UnityEngine;
 
 namespace PhlegmaticOne.DataStorage.Configuration.Storage {
@@ -12,10 +13,17 @@ namespace PhlegmaticOne.DataStorage.Configuration.Storage {
         [SerializeField] private DataStorageConfigurationStorage _localStorage;
         [SerializeField] private DataStorageConfigurationStorage _onlineStorage;
 
+        [Header("Change Tracker")] 
+        [SerializeField] private ChangeTrackerConfiguration _changeTrackerConfiguration;
+
         public DataStorageSourcesContainer GetSourceContainer() {
             return new DataStorageSourcesContainer(
                 _localStorage.CreateSourceFactory(), _onlineStorage.CreateSourceFactory(),
                 GetInternetProvider(), _defaultOperationType);
+        }
+
+        public ChangeTrackerConfiguration GetChangeTrackerConfiguration() {
+            return _changeTrackerConfiguration;
         }
 
         public void CopyFrom(DataStorageConfiguration copyFrom) {

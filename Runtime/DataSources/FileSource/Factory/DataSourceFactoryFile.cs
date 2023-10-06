@@ -1,4 +1,5 @@
-﻿using PhlegmaticOne.DataStorage.DataSources.Base;
+﻿using PhlegmaticOne.DataStorage.Contracts;
+using PhlegmaticOne.DataStorage.DataSources.Base;
 using PhlegmaticOne.DataStorage.DataSources.FileSource.Options;
 using PhlegmaticOne.DataStorage.DataSources.FileSource.Serializers;
 using PhlegmaticOne.DataStorage.KeyResolvers.Base;
@@ -15,7 +16,7 @@ namespace PhlegmaticOne.DataStorage.DataSources.FileSource.Factory {
             _keyResolver = keyResolver;
         }
         
-        public DataSourceBase<T> CreateDataSource<T>() {
+        public DataSourceBase<T> CreateDataSource<T>() where T: class, IModel {
             return new FileDataSource<T>(_fileSerializer, _fileOptions, _keyResolver);
         }
     }

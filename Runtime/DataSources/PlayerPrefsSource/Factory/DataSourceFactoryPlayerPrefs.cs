@@ -1,4 +1,5 @@
-﻿using PhlegmaticOne.DataStorage.DataSources.Base;
+﻿using PhlegmaticOne.DataStorage.Contracts;
+using PhlegmaticOne.DataStorage.DataSources.Base;
 using PhlegmaticOne.DataStorage.DataSources.PlayerPrefsSource.Converters;
 using PhlegmaticOne.DataStorage.KeyResolvers.Base;
 
@@ -12,7 +13,7 @@ namespace PhlegmaticOne.DataStorage.DataSources.PlayerPrefsSource.Factory {
             _keyResolver = keyResolver;
         }
         
-        public DataSourceBase<T> CreateDataSource<T>() {
+        public DataSourceBase<T> CreateDataSource<T>() where T: class, IModel {
             return new PlayerPrefsDataSource<T>(_entityConverter, _keyResolver);
         }
     }
