@@ -1,13 +1,14 @@
 ﻿using PhlegmaticOne.DataStorage.Infrastructure;
 using PhlegmaticOne.DataStorage.Infrastructure.Internet;
 using PhlegmaticOne.DataStorage.Infrastructure.Internet.Base;
+using PhlegmaticOne.DataStorage.Migrations;
 using PhlegmaticOne.DataStorage.Storage.Base;
 using PhlegmaticOne.DataStorage.Storage.ChangeTracker;
 using UnityEngine;
 
 namespace PhlegmaticOne.DataStorage.Configuration.Storage {
     [CreateAssetMenu(menuName = "Data Storage/Data Storage Configuration", fileName = "DataStorageConfiguration")]
-    public class DataStorageConfiguration : ScriptableObject {
+    public class DataStorageConfiguration : ScriptableObject, IDataStorageConfiguration {
         [Header("Data storage")] 
         [SerializeField] private StorageOperationType _defaultOperationType;
         [SerializeField] private DataStorageConfigurationStorage _localStorage;
