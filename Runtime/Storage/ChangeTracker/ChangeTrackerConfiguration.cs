@@ -6,6 +6,9 @@ namespace PhlegmaticOne.DataStorage.Storage.ChangeTracker {
     public class ChangeTrackerConfiguration {
         [SerializeField] private int _framesInterval;
         [SerializeField] private int _delayFrames;
+
+        [SerializeField] private float _timeInterval;
+        [SerializeField] private float _timeDelay;
         [SerializeField] private bool _isLogTrackedChangesInDebugMode;
 
         public ChangeTrackerConfiguration(int framesInterval, int delayFrames, bool isLogTrackedChangesInDebugMode) {
@@ -16,6 +19,8 @@ namespace PhlegmaticOne.DataStorage.Storage.ChangeTracker {
         
         public int FramesInterval => _framesInterval;
         public int DelayFrames => _delayFrames;
+        public float TimeInterval => _timeInterval;
+        public float TimeDelay => _timeDelay;
         public bool IsLogTrackedChangesInDebugMode => _isLogTrackedChangesInDebugMode;
     }
 }

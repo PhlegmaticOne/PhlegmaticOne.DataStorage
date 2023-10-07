@@ -1,6 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 using PhlegmaticOne.DataStorage.Infrastructure.Helpers;
+using PhlegmaticOne.DataStorage.Storage.Base;
 using UnityEngine;
 
 namespace PhlegmaticOne.DataStorage.Storage.ChangeTracker {
@@ -23,12 +24,23 @@ namespace PhlegmaticOne.DataStorage.Storage.ChangeTracker {
                     continue;
                 }
 
-                if (Configuration.IsLogTrackedChangesInDebugMode && _isDebug) {
-                    Debug.Log($"ChangeTracker tracked {tracker.TrackedChanges} changes in {tracker.DisplayName} and now saving them!");    
-                }
-                
+                LogTrackedChanges(tracker);
                 await tracker.SaveChangesAsync(cancellationToken);
             }
         }
+
+        protected void LogCancellation() {
+            if (ShouldLog()) {
+                Debug.Log("Change tracker: tracking was canceled");
+            }
+        }
+
+        private void LogTrackedChanges(IValueSource tracker) {
+            if (ShouldLog()) {
+                Debug.Log($"ChangeTracker tracked {tracker.TrackedChanges} changes in {tracker.DisplayName} and now saving them!");    
+            }
+        }
+        
+        private bool ShouldLog() => Configuration.IsLogTrackedChangesInDebugMode && _isDebug;
     }
 }
