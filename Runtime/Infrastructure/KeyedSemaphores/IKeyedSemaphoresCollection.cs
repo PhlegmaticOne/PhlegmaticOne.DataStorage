@@ -26,7 +26,7 @@ namespace KeyedSemaphores
         /// <exception cref="T:System.OperationCanceledException">
         ///     <paramref name="cancellationToken">cancellationToken</paramref> was canceled.
         /// </exception>
-        ValueTask<IDisposable> LockAsync(TKey key, CancellationToken cancellationToken = default);
+        Task<IDisposable> LockAsync(TKey key, CancellationToken cancellationToken = default);
 
         /// <summary>
         ///     Gets or creates a keyed semaphore with the provided unique key
@@ -54,7 +54,7 @@ namespace KeyedSemaphores
         /// <exception cref="T:System.OperationCanceledException">
         ///     <paramref name="cancellationToken">cancellationToken</paramref> was canceled.
         /// </exception>
-        ValueTask<bool> TryLockAsync(TKey key, TimeSpan timeout, Action callback, CancellationToken cancellationToken = default);
+        Task<bool> TryLockAsync(TKey key, TimeSpan timeout, Action callback, CancellationToken cancellationToken = default);
 
         /// <summary>
         ///     Gets or creates a keyed semaphore with the provided unique key
@@ -82,7 +82,7 @@ namespace KeyedSemaphores
         /// <exception cref="T:System.OperationCanceledException">
         ///     <paramref name="cancellationToken">cancellationToken</paramref> was canceled.
         /// </exception>
-        ValueTask<bool> TryLockAsync(TKey key, TimeSpan timeout, Func<Task> callback, CancellationToken cancellationToken = default);
+        Task<bool> TryLockAsync(TKey key, TimeSpan timeout, Func<Task> callback, CancellationToken cancellationToken = default);
 
         /// <summary>
         ///     Gets or creates a keyed semaphore with the provided unique key
