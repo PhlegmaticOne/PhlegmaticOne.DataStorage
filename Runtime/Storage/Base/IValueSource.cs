@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 namespace PhlegmaticOne.DataStorage.Storage.Base {
     public interface IValueSource {
         int TrackedChanges { get; }
+        string DisplayName { get; }
         Task SaveChangesAsync(CancellationToken cancellationToken = default);
     }
 

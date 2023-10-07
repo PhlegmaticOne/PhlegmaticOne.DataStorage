@@ -30,7 +30,7 @@ namespace PhlegmaticOne.DataStorage.Configuration.Storage {
                 _storageType = _storageType,
                 _inMemoryConfiguration = new DataStorageInMemoryConfiguration(),
                 _fileConfiguration = new DataStorageFileConfiguration(_fileConfiguration),
-                _playerPrefsConfiguration = new DataStoragePlayerPrefsConfiguration(_playerPrefsConfiguration)
+                _playerPrefsConfiguration = new DataStoragePlayerPrefsConfiguration(_playerPrefsConfiguration),
             };
         }
     }

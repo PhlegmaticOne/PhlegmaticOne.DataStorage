@@ -1,20 +1,17 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using PhlegmaticOne.DataStorage.Infrastructure.Helpers;
+using UnityEngine;
 
 namespace PhlegmaticOne.DataStorage.Storage.ChangeTracker {
     public abstract class ChangeTrackerDataStorage : IChangeTracker {
-        protected class ChangeTrackerException : Exception {
-            public ChangeTrackerException(Exception innerException) :
-                base("Change tracker stopped working", innerException) { }
-        }
-        
         protected readonly ChangeTrackerConfiguration Configuration;
         private readonly DataStorage _dataStorage;
+        private readonly bool _isDebug;
 
         protected ChangeTrackerDataStorage(DataStorage dataStorage, ChangeTrackerConfiguration configuration) {
             _dataStorage = dataStorage;
+            _isDebug = Application.isEditor || Debug.isDebugBuild;
             Configuration = ExceptionHelper.EnsureNotNull(configuration);
         }
 
@@ -24,6 +21,10 @@ namespace PhlegmaticOne.DataStorage.Storage.ChangeTracker {
             foreach (var tracker in _dataStorage.ValueSources) {
                 if (tracker.TrackedChanges <= 0) {
                     continue;
+                }
+
+                if (Configuration.IsLogTrackedChangesInDebugMode && _isDebug) {
+                    Debug.Log($"ChangeTracker tracked {tracker.TrackedChanges} changes in {tracker.DisplayName} and now saving them!");    
                 }
                 
                 await tracker.SaveChangesAsync(cancellationToken);

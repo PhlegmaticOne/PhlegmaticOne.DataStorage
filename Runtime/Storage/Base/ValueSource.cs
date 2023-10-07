@@ -13,6 +13,7 @@ namespace PhlegmaticOne.DataStorage.Storage.Base {
         }
         
         public int TrackedChanges { get; private set; }
+        public string DisplayName => typeof(T).Name;
 
         public T AsTrackable() {
             TrackedChanges++;
