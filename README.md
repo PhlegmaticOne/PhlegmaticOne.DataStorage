@@ -8,7 +8,35 @@
 
 ```cs
 public class DataStorageInstaller : MonoInstaller {
-    [SerializeField] private DataStorageConfiguration _configuration;    
+    [SerializeField] private DataStorageConfiguration _configuration;
+    
+    private class DataStorageFactory : IFactory<DataStorage> {
+        private readonly DataStorageSourcesContainer _container;
+        private readonly IList<IService> _services;
+
+        public DataStorageFactory(DataStorageSourcesContainer container, IList<IService> services) {
+            _container = container;
+            _services = services;
+        }
+        
+        public DataStorage Create() {
+            return new DataStorage(_container, _services);
+        }
+    }
+    
+    private class ChangeTrackerTimeIntervalFactory : IFactory<ChangeTrackerTimeInterval> {
+        private readonly DataStorage _dataStorage;
+        private readonly ChangeTrackerConfiguration _configuration;
+
+        public ChangeTrackerTimeIntervalFactory(DataStorage dataStorage, ChangeTrackerConfiguration configuration) {
+            _dataStorage = dataStorage;
+            _configuration = configuration;
+        }
+
+        public ChangeTrackerTimeInterval Create() {
+            return new ChangeTrackerTimeInterval(_dataStorage, _configuration);
+        }
+    }
     
     public override void InstallBindings() {
         BindDataStorage();
@@ -18,13 +46,15 @@ public class DataStorageInstaller : MonoInstaller {
     }
 
     private void BindDataStorage() {
-        Container.BindInterfacesAndSelfTo<DataStorage>().AsSingle();
+        Container.BindInterfacesAndSelfTo<DataStorage>().FromFactory<DataStorage, DataStorageFactory>().AsSingle();
     }
 
     private void BindChangeTracker() {
         var configuration = _configuration.GetChangeTrackerConfiguration();
         Container.Bind<ChangeTrackerConfiguration>().FromInstance(configuration).AsSingle();
-        Container.BindInterfacesTo<ChangeTrackerTimeInterval>().AsSingle();
+        Container.BindInterfacesTo<ChangeTrackerTimeInterval>()
+            .FromFactory<ChangeTrackerTimeInterval, ChangeTrackerTimeIntervalFactory>()
+            .AsSingle();
     }
 
     private void BindSourcesContainer() {
