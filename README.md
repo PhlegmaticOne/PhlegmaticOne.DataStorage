@@ -72,6 +72,63 @@ public class ChangeTrackerFrameInterval : ChangeTrackerDataStorage {
 }
 ```
 
+# Usage
+
+## Model
+
+```cs
+[Serializable]
+[DataContract]
+public class PlayerState : IModel {
+    [JsonProperty("coins")] [DataMember] private int _coins;
+
+    [JsonConstructor]
+    public PlayerState(int coins) => _coins = coins;
+
+    [JsonIgnore] 
+    public int Coins => _coins;
+
+    public void ChangeCoins(int delta) {
+        var newCoins = _coins + delta;
+        
+        if (newCoins < 0) {
+            throw new Exception("no");
+        }
+
+        _coins = newCoins;
+    }
+}
+```
+
+## Service
+
+```cs
+public class TestService {
+    private readonly IDataStorage _dataStorage;
+    
+    private IValueSource<PlayerState> _playerState;
+
+    public TestService(IDataStorage dataStorage) {
+        _dataStorage = dataStorage;
+    }
+
+    public async Task InitializeAsync() {
+        _playerState = await _dataStorage.ReadAsync<PlayerState>();
+    }
+
+    public int Coins => _playerState.AsNoTrackable().Coins;
+
+    public void AddCoins(int coins) => _playerState.AsTrackable().ChangeCoins(coins);
+    
+    public void SubtractCoins(int coins) => AddCoins(-coins);
+}
+```
+
+### Install this packages
+
+- ```AsTrackable``` - should be called for editable operations - ```ChangeTracker``` will save model if ```TrackedChanges > 0``` and ```AsTrackable``` increases that value
+- ```OnPropertyChanged``` - should be called for readonly operations - ```TrackedChanges``` will not be increased
+  
 ## License
 
 [MIT](https://choosealicense.com/licenses/mit/)
