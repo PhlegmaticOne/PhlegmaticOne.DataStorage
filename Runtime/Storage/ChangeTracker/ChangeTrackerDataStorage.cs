@@ -19,7 +19,7 @@ namespace PhlegmaticOne.DataStorage.Storage.ChangeTracker {
         public abstract Task TrackAsync(CancellationToken cancellationToken = default);
 
         protected async Task SaveChanges(CancellationToken cancellationToken) {
-            foreach (var tracker in _dataStorage.ValueSources) {
+            foreach (var tracker in _dataStorage.ValueSources.ToArray()) {
                 if (tracker.TrackedChanges <= 0) {
                     continue;
                 }
