@@ -14,9 +14,10 @@ namespace PhlegmaticOne.DataStorage.Storage.ChangeTracker {
                 await TrackChanges(cancellationToken);
             }
             catch (OperationCanceledException) {
-                LogCancellation();
+                Logger.LogCancellation();
             }
             catch (Exception e) {
+                Logger.LogError(e.Message);
                 Debug.LogException(new ChangeTrackerException(e));
             }
         }

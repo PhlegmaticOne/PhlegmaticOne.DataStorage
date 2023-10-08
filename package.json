@@ -1,8 +1,8 @@
 {
   "name": "com.phlegmaticone.datastorage",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "displayName": "Data Storage",
-  "description": "Data Storage",
+  "description": "Data storage for Unity with PlayerPrefs and Files support",
   "unity": "2020.3",
   "dependencies": {
     "com.unity.nuget.newtonsoft-json": "3.0.2"
