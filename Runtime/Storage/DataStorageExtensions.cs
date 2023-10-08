@@ -13,9 +13,9 @@ namespace PhlegmaticOne.DataStorage.Storage {
             dataStorage.ReadAsync<T>(ct, StorageOperationType.Online);
 
         public static bool NoValue<T>(this IValueSource<T> valueSource) where T : class, IModel => 
-            HasValue(valueSource) == false;
+            valueSource is null || valueSource.AsNoTrackable() is null;
 
         public static bool HasValue<T>(this IValueSource<T> valueSource) where T : class, IModel => 
-            valueSource.AsNoTrackable() != null;
+            valueSource != null && valueSource.AsNoTrackable() != null;
     }
 }

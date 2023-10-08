@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using PhlegmaticOne.DataStorage.Contracts;
 using PhlegmaticOne.DataStorage.DataSources;
 using PhlegmaticOne.DataStorage.DataSources.Base;
@@ -37,7 +36,7 @@ namespace PhlegmaticOne.DataStorage.Infrastructure {
             return operationType switch {
                 StorageOperationType.Local => _localSources,
                 StorageOperationType.Online => _onlineSources,
-                _ => throw new ArgumentOutOfRangeException(nameof(operationType), "Unknown StorageOperationType", null)
+                _ => throw new ArgumentOutOfRangeException(nameof(operationType), operationType, "Unknown StorageOperationType")
             };
         }
 
