@@ -1,15 +1,24 @@
 {
   "name": "com.phlegmaticone.datastorage",
-  "version": "1.0.3",
+  "version": "1.0.5",
   "displayName": "Data Storage",
-  "description": "Data Storage",
+  "description": "Data storage for Unity with PlayerPrefs and Files support",
   "unity": "2020.3",
   "dependencies": {
     "com.unity.nuget.newtonsoft-json": "3.0.2",
     "com.google.firebase.app": "11.3.0"
   },
   "keywords": [
-    "Data", "Storage", "DataStorage"
+    "Data",
+    "Storage",
+    "DataStorage",
+    "Unity",
+    "Files",
+    "PlayerPrefs",
+    "Saving",
+    "Saves",
+    "Persistent",
+    "Serialization"
   ],
   "author": {
     "name": "Aleksandr Krotov",

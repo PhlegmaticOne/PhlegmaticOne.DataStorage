@@ -81,7 +81,7 @@ namespace KeyedSemaphores
 
         /// <inheritdoc />
         [SuppressMessage("ReSharper", "MethodHasAsyncOverload")]
-        public async ValueTask<IDisposable> LockAsync(TKey key, CancellationToken cancellationToken = default)
+        public async Task<IDisposable> LockAsync(TKey key, CancellationToken cancellationToken = default)
         {
             if (key == null) throw new ArgumentNullException(nameof(key));
             cancellationToken.ThrowIfCancellationRequested();
@@ -100,7 +100,7 @@ namespace KeyedSemaphores
         
         /// <inheritdoc />
         [SuppressMessage("ReSharper", "MethodHasAsyncOverload")]
-        public async ValueTask<bool> TryLockAsync(TKey key, TimeSpan timeout, Action callback, CancellationToken cancellationToken = default)
+        public async Task<bool> TryLockAsync(TKey key, TimeSpan timeout, Action callback, CancellationToken cancellationToken = default)
         {
             if (key == null)
             {
@@ -147,7 +147,7 @@ namespace KeyedSemaphores
         
         /// <inheritdoc />
         [SuppressMessage("ReSharper", "MethodHasAsyncOverload")]
-        public async ValueTask<bool> TryLockAsync(TKey key, TimeSpan timeout, Func<Task> callback, CancellationToken cancellationToken = default)
+        public async Task<bool> TryLockAsync(TKey key, TimeSpan timeout, Func<Task> callback, CancellationToken cancellationToken = default)
         {
             if (key == null) throw new ArgumentNullException(nameof(key));
 

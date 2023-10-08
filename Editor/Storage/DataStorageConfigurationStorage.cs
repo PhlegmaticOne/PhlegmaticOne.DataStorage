@@ -13,17 +13,16 @@ namespace PhlegmaticOne.DataStorage.Configuration.Storage {
         [SerializeField] private DataStorageType _storageType;
         
         [Header("Configurations")]
-        [SerializeField] private DataStorageInMemoryConfiguration _inMemoryConfiguration;
         [SerializeField] private DataStorageFileConfiguration _fileConfiguration;
         [SerializeField] private DataStoragePlayerPrefsConfiguration _playerPrefsConfiguration;
         [SerializeField] private DataStorageFirebaseConfiguration _firebaseConfiguration;
 
         public IDataSourceFactory CreateSourceFactory() {
             return _storageType switch {
-                DataStorageType.InMemory => _inMemoryConfiguration.CreateSourceFactory(),
+                DataStorageType.InMemory => new DataStorageInMemoryConfiguration().CreateSourceFactory(),
                 DataStorageType.PlayerPrefs => _playerPrefsConfiguration.CreateSourceFactory(),
                 DataStorageType.File => _fileConfiguration.CreateSourceFactory(),
-                DataStorageType.Firebase => _fileConfiguration.CreateSourceFactory(),
+                DataStorageType.Firebase => _firebaseConfiguration.CreateSourceFactory(),
                 _ => throw new ArgumentException($"Unknown data storage type: {_storageType}", nameof(_storageType))
             };
         }
@@ -31,7 +30,6 @@ namespace PhlegmaticOne.DataStorage.Configuration.Storage {
         public DataStorageConfigurationStorage Clone() {
             return new DataStorageConfigurationStorage {
                 _storageType = _storageType,
-                _inMemoryConfiguration = new DataStorageInMemoryConfiguration(),
                 _fileConfiguration = new DataStorageFileConfiguration(_fileConfiguration),
                 _playerPrefsConfiguration = new DataStoragePlayerPrefsConfiguration(_playerPrefsConfiguration),
                 _firebaseConfiguration = new DataStorageFirebaseConfiguration(_firebaseConfiguration)

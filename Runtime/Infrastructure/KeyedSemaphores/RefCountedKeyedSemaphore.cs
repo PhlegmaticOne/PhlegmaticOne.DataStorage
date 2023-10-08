@@ -50,7 +50,7 @@ namespace KeyedSemaphores
                    && _refs == other._refs;
         }
 
-        public override bool Equals(object? obj)
+        public override bool Equals(object obj)
         {
             return obj is RefCountedKeyedSemaphore<TKey> other && Equals(other);
         }

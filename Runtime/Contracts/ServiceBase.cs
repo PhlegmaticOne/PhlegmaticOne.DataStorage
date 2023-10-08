@@ -14,6 +14,12 @@ namespace PhlegmaticOne.DataStorage.Contracts {
         public async Task<object> ForceReadAsync(IDataStorage dataStorage, CancellationToken ct = default) {
             var value = await dataStorage.ReadAsync<T>(ct, OperationType);
             Model = value;
+            return value.AsNoTrackable();
+        }
+        
+        protected async Task<IValueSource<T>> ReadAsync(IDataStorage dataStorage, CancellationToken ct = default) {
+            var value = await dataStorage.ReadAsync<T>(ct, OperationType);
+            Model = value;
             return value;
         }
 
