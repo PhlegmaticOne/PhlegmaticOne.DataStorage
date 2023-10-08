@@ -1,6 +1,6 @@
-# Data storage
+# Data Storage
 
-### Unity PlayerPrefs and Files
+### Data storage for Unity with PlayerPrefs and Files support
 
 ##
 
@@ -93,7 +93,7 @@ public class ChangeTrackerFrameInterval : ChangeTrackerDataStorage {
             }
         }
         catch (OperationCanceledException) {
-            LogCancellation();
+            Logger.LogCancellation();
         }
         catch (Exception e) {
             Debug.LogException(new ChangeTrackerException(e));
@@ -154,11 +154,7 @@ public class TestService {
 }
 ```
 
-### Install this packages
+### ```AsTrackable``` and ```AsNoTrackable```
 
 - ```AsTrackable``` - should be called for editable operations - ```ChangeTracker``` will save model if ```TrackedChanges > 0``` and ```AsTrackable``` increases that value
-- ```OnPropertyChanged``` - should be called for readonly operations - ```TrackedChanges``` will not be increased
-  
-## License
-
-[MIT](https://choosealicense.com/licenses/mit/)
+- ```AsNoTrackable``` - should be called for readonly operations - ```TrackedChanges``` will not be increased
