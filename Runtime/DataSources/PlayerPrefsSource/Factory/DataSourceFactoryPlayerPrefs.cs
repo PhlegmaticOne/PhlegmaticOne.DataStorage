@@ -1,20 +1,20 @@
 ﻿using PhlegmaticOne.DataStorage.Contracts;
 using PhlegmaticOne.DataStorage.DataSources.Base;
-using PhlegmaticOne.DataStorage.DataSources.PlayerPrefsSource.Converters;
+using PhlegmaticOne.DataStorage.DataSources.PlayerPrefsSource.Serializers;
 using PhlegmaticOne.DataStorage.KeyResolvers.Base;
 
 namespace PhlegmaticOne.DataStorage.DataSources.PlayerPrefsSource.Factory {
     public sealed class DataSourceFactoryPlayerPrefs : IDataSourceFactory {
-        private readonly IEntityConverter _entityConverter;
+        private readonly IEntitySerializer _entitySerializer;
         private readonly IKeyResolver _keyResolver;
 
-        public DataSourceFactoryPlayerPrefs(IEntityConverter entityConverter, IKeyResolver keyResolver) {
-            _entityConverter = entityConverter;
+        public DataSourceFactoryPlayerPrefs(IEntitySerializer entitySerializer, IKeyResolver keyResolver) {
+            _entitySerializer = entitySerializer;
             _keyResolver = keyResolver;
         }
         
         public DataSourceBase<T> CreateDataSource<T>() where T: class, IModel {
-            return new PlayerPrefsDataSource<T>(_entityConverter, _keyResolver);
+            return new PlayerPrefsDataSource<T>(_entitySerializer, _keyResolver);
         }
     }
 }

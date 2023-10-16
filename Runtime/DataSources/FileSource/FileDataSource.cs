@@ -21,17 +21,17 @@ namespace PhlegmaticOne.DataStorage.DataSources.FileSource {
             EnsurePersistentDirectoryExists();
         }
 
-        protected override Task WriteAsync(T value, CancellationToken cancellationToken) {
+        protected override Task WriteAsync(T value, CancellationToken cancellationToken = default) {
             var filePath = GetFilePath();
             return Task.Run(() => SerializeObjectIntoFile(filePath, value), cancellationToken);
         }
 
-        public override Task DeleteAsync(CancellationToken cancellationToken) {
+        public override Task DeleteAsync(CancellationToken cancellationToken = default) {
             var filePath = GetFilePath();
             return Task.Run(() => File.Delete(filePath), cancellationToken);
         }
 
-        public override Task<T> ReadAsync(CancellationToken cancellationToken) {
+        public override Task<T> ReadAsync(CancellationToken cancellationToken = default) {
             var filePath = GetFilePath();
             return Task.Run(() => DeserializeObjectFromFile(filePath), cancellationToken);
         }

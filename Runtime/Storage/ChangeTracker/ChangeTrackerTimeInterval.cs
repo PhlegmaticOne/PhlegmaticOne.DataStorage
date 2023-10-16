@@ -6,8 +6,9 @@ using UnityEngine;
 
 namespace PhlegmaticOne.DataStorage.Storage.ChangeTracker {
     public class ChangeTrackerTimeInterval : ChangeTrackerDataStorage {
-        public ChangeTrackerTimeInterval(DataStorage dataStorage, ChangeTrackerConfiguration configuration) : 
-            base(dataStorage, configuration) { }
+        public ChangeTrackerTimeInterval(
+            DataStorage dataStorage, ChangeTrackerConfiguration configuration, IChangeTrackerLogger logger) : 
+            base(dataStorage, configuration, logger) { }
 
         public override async Task TrackAsync(CancellationToken cancellationToken = default) {
             try {

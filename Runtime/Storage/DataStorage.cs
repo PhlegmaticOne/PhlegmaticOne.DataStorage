@@ -4,19 +4,19 @@ using System.Threading;
 using System.Threading.Tasks;
 using KeyedSemaphores;
 using PhlegmaticOne.DataStorage.Contracts;
-using PhlegmaticOne.DataStorage.Infrastructure;
+using PhlegmaticOne.DataStorage.DataSources;
 using PhlegmaticOne.DataStorage.Infrastructure.Helpers;
 using PhlegmaticOne.DataStorage.Storage.Base;
 
 namespace PhlegmaticOne.DataStorage.Storage {
     public class DataStorage : IDataStorage {
+        private readonly DataSourcesSet _dataSourcesSet;
         private readonly Dictionary<string, IValueSource> _valueSources;
-        private readonly DataStorageSourcesContainer _sourcesContainer;
         private readonly IList<IService> _services;
         
-        public DataStorage(DataStorageSourcesContainer dataStorageSourcesContainer, IList<IService> services) {
-            _sourcesContainer = ExceptionHelper.EnsureNotNull(dataStorageSourcesContainer, nameof(dataStorageSourcesContainer));
-            _services = ExceptionHelper.EnsureNotNull(services, nameof(services));
+        public DataStorage(DataSourcesSet dataSourcesSet, IList<IService> services = null) {
+            _dataSourcesSet = ExceptionHelper.EnsureNotNull(dataSourcesSet, nameof(dataSourcesSet));
+            _services = services ?? new List<IService>();
             _valueSources = new Dictionary<string, IValueSource>();
         }
 
@@ -28,13 +28,14 @@ namespace PhlegmaticOne.DataStorage.Storage {
             }
         }
 
-        public async Task SaveAsync<T>(T value, CancellationToken ct, StorageOperationType operationType) where T: class, IModel {
-            using var _ = await KeyedSemaphore.LockAsync(LockKey<T>(), ct);
-            var source = _sourcesContainer.GetSource<T>(operationType);
+        public async Task SaveAsync<T>(T value, CancellationToken ct = default) where T: class, IModel {
+            var key = LockKey<T>();
+            using var _ = await KeyedSemaphore.LockAsync(key, ct);
+            var source = _dataSourcesSet.Source<T>();
             await source.WriteAsync(value, ct);
         }
 
-        public async Task<IValueSource<T>> ReadAsync<T>(CancellationToken ct, StorageOperationType operationType) where T: class, IModel {
+        public async Task<IValueSource<T>> ReadAsync<T>(CancellationToken ct = default) where T: class, IModel {
             var key = LockKey<T>();
             using var _ = await KeyedSemaphore.LockAsync(key, ct);
             
@@ -42,16 +43,17 @@ namespace PhlegmaticOne.DataStorage.Storage {
                 return (IValueSource<T>)cached;
             }
             
-            var source = _sourcesContainer.GetSource<T>(operationType);
+            var source = _dataSourcesSet.Source<T>();
             var value = await source.ReadAsync(ct);
             var valueSource = new ValueSource<T>(this, value);
             _valueSources.Add(key, valueSource);
             return valueSource;
         }
 
-        public async Task DeleteAsync<T>(CancellationToken ct = default, StorageOperationType operationType = StorageOperationType.Auto) where T: class, IModel {
-            using var _ = await KeyedSemaphore.LockAsync(LockKey<T>(), ct);
-            var source = _sourcesContainer.GetSource<T>(operationType);
+        public async Task DeleteAsync<T>(CancellationToken ct = default) where T: class, IModel {
+            var key = LockKey<T>();
+            using var _ = await KeyedSemaphore.LockAsync(key, ct);
+            var source = _dataSourcesSet.Source<T>();
             await source.DeleteAsync(ct);
         }
 

@@ -27,7 +27,7 @@ namespace PhlegmaticOne.DataStorage.Storage.Base {
             _value = value;
         }
 
-        public async Task SaveChangesAsync(CancellationToken cancellationToken) {
+        public async Task SaveChangesAsync(CancellationToken cancellationToken = default) {
             await _dataStorage.SaveAsync(_value, cancellationToken);
             TrackedChanges = 0;
         }

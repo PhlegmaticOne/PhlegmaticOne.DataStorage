@@ -7,6 +7,6 @@ namespace PhlegmaticOne.DataStorage.Configuration.KeyResolvers {
         menuName = "Data Storage/Type Name Key Resolver Configuration",
         fileName = "TypeNameKeyResolverConfiguration")]
     public sealed class DataStorageTypeKeyResolverConfiguration : DataStorageKeyResolverConfigurationBase {
-        public override IKeyResolver CreateKeyResolver() => new TypeNameKeyResolver();
+        public override IKeyResolver GetKeyResolver() => new TypeNameKeyResolver();
     }
 }

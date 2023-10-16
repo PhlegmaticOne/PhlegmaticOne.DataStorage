@@ -3,6 +3,6 @@ using UnityEngine;
 
 namespace PhlegmaticOne.DataStorage.Configuration.KeyResolvers {
     public abstract class DataStorageKeyResolverConfigurationBase : ScriptableObject {
-        public abstract IKeyResolver CreateKeyResolver();
+        public abstract IKeyResolver GetKeyResolver();
     }
 }

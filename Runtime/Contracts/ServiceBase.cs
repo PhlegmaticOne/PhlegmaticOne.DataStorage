@@ -9,28 +9,25 @@ namespace PhlegmaticOne.DataStorage.Contracts {
         protected IValueSource<T> Model;
 
         public Type ModelType => typeof(T);
-        protected virtual StorageOperationType OperationType => StorageOperationType.Auto;
         
         public async Task<object> ForceReadAsync(IDataStorage dataStorage, CancellationToken ct = default) {
-            var value = await dataStorage.ReadAsync<T>(ct, OperationType);
+            var value = await dataStorage.ReadAsync<T>(ct);
             Model = value;
             return value.AsNoTrackable();
         }
         
         protected async Task<IValueSource<T>> ReadAsync(IDataStorage dataStorage, CancellationToken ct = default) {
-            var value = await dataStorage.ReadAsync<T>(ct, OperationType);
+            var value = await dataStorage.ReadAsync<T>(ct);
             Model = value;
             return value;
         }
 
-        public Task SaveStateAsync(IDataStorage dataStorage, CancellationToken ct) {
-            return dataStorage.SaveAsync(Model.AsNoTrackable(), ct, OperationType);
+        public Task SaveStateAsync(IDataStorage dataStorage, CancellationToken ct = default) {
+            return dataStorage.SaveAsync(Model.AsNoTrackable(), ct);
         }
 
         public Task DeleteAsync(IDataStorage dataStorage, CancellationToken ct = default) {
-            return dataStorage.DeleteAsync<T>(ct, OperationType);
+            return dataStorage.DeleteAsync<T>(ct);
         }
-
-        protected Task SaveModelAsync(CancellationToken ct = default) => DataStorage.SaveAsync(Model.AsNoTrackable(), ct);
     }
 }
