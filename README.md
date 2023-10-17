@@ -188,7 +188,7 @@ Available at Create -> Data Storage -> Change Tracker Config
 
 ## Key Resolver Configuration
 
-Availdable at Create -> Data Storage -> Type Name Key Resolver Configuration
+Available at Create -> Data Storage -> Type Name Key Resolver Configuration
 
 ## Storage configs
 
@@ -197,7 +197,9 @@ Availdable at Create -> Data Storage -> Type Name Key Resolver Configuration
 Package includes following storages and their configs:
 - ```InMemory``` - all data is stored in memory only in the current session and is cleared when exiting the game
 - ```PlayerPrefs``` - data is stroring in PlayerPrefs in one of 2 possible formats: JSON or XML
-- ```Files``` - data is stroring in files in one of 3 possible formats: JSON, XML or Binary. 
+- ```Files``` - data is stroring in files in one of 3 possible formats: JSON, XML or Binary.
+
+Available at Create -> Data Storage -> Storages -> {StorageType}
 
 ## Script for initializing DataStorage and ChangeTracker
 
