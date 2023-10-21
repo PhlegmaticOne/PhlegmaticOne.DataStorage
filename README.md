@@ -55,9 +55,9 @@ public class PlayerState : IModel {
 
     public static PlayerState Initial => new PlayerState(string.Empty, 0, 0);
 
-    [JsonIgnore] public int Coins => _coins;
+    [JsonIgnore] [IgnoreDataMember] public int Coins => _coins;
 
-    [JsonIgnore] public int Gems => _gems;
+    [JsonIgnore] [IgnoreDataMember] public int Gems => _gems;
 
     public void ChangeName(string name) => _name = name;
 
@@ -86,6 +86,8 @@ public interface IPlayerCurrencyService {
     int GetCurrency(CurrencyType currencyType);
 }
 ```
+
+### Implementation with ```IDataStorage```
 
 ```cs
 public class PlayerCurrencyService : IPlayerCurrencyService {
@@ -124,7 +126,8 @@ public class PlayerCurrencyService : IPlayerCurrencyService {
     }
 }
 ```
-or
+
+### Implementation with ```IValueSource```
 
 ```cs
 public class PlayerCurrencyService : IPlayerCurrencyService {
@@ -167,13 +170,16 @@ public class PlayerCurrencyService : IPlayerCurrencyService {
 
 ![image](https://github.com/PhlegmaticOne/PhlegmaticOne.DataStorage/assets/73738250/c3635274-af43-4582-bc5b-e6c5e7f4f414)
 
-- ```TimeInterval``` - saves all tracked changed every ```TimeInterval``` seconds
+- ```TimeInterval``` - saves all tracked changes every ```TimeInterval``` seconds
 - ```TimeDelay``` - initial delay before change tracking starts
-- ```IsChangeTrackerVerbose``` - if ```true``` enables logging for information such as: amount of tracked changes and errors
+- ```IsChangeTrackerVerbose``` - if ```true``` enables logging for information such as: amount of tracked changes, warnings and errors
 
 Available at Create -> Data Storage -> Change Tracker Config
 
 ## Key Resolver Configuration
+
+Creates an object that defines the key by which the data will be saved: for files this is the file name, for PlayerPrefs this is the key for PlayerPrefs. 
+The standard implementation returns the class name as the key - ```typeof(T).Name```
 
 Available at Create -> Data Storage -> Type Name Key Resolver Configuration
 
