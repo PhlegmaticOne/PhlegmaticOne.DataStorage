@@ -60,6 +60,7 @@ public class PlayerState : IModel {
     [JsonIgnore] public int Gems => _gems;
 
     public void ChangeName(string name) => _name = name;
+
     public void ChangeCoins(int delta) {
         _coins += delta;
         _coins = Mathf.Clamp(_coins, 0, int.MaxValue);
@@ -74,13 +75,19 @@ public class PlayerState : IModel {
 
 ## Service
 
+### Interface
+
 ```cs
 public interface IPlayerCurrencyService {
-    Task InitializeAsync(CancellationToken cancellationToken);
+    Task InitializeAsync();
+
     void ChangeCurrency(int delta, CurrencyType currencyType);
+
     int GetCurrency(CurrencyType currencyType);
 }
+```
 
+```cs
 public class PlayerCurrencyService : IPlayerCurrencyService {
     private readonly IDataStorage _dataStorage;
     private IValueSource<PlayerState> _playerState;
@@ -89,8 +96,46 @@ public class PlayerCurrencyService : IPlayerCurrencyService {
         _dataStorage = dataStorage;
     }
     
-    public async Task InitializeAsync(CancellationToken cancellationToken) {
-        _playerState = await _dataStorage.ReadAsync<PlayerState>(cancellationToken);
+    public async Task InitializeAsync() {
+        _playerState = await _dataStorage.ReadAsync<PlayerState>();
+        
+        if (_playerState.NoValue()) {
+            _playerState.SetRaw(PlayerState.Initial);  
+        }
+    }
+
+    public int GetCurrency(CurrencyType currencyType) {
+        return currencyType switch {
+            CurrencyType.Coins => _playerState.AsNoTrackable().Coins,
+            CurrencyType.Gems => _playerState.AsNoTrackable().Gems,
+            _ => throw new ArgumentOutOfRangeException(nameof(currencyType), currencyType, null)
+        };
+    }
+
+    public void ChangeCurrency(int delta, CurrencyType currencyType) {
+        switch (currencyType) {
+            case CurrencyType.Coins:
+                _playerState.AsTrackable().ChangeCoins(delta);
+                break;
+            case CurrencyType.Gems:
+                _playerState.AsTrackable().ChangeGems(delta);
+                break;
+        }
+    }
+}
+```
+or
+
+```cs
+public class PlayerCurrencyService : IPlayerCurrencyService {
+    private readonly IValueSource<PlayerState> _playerState;
+
+    public PlayerCurrencyService(IValueSource<PlayerState> playerState) {
+        _playerState = playerState;
+    }
+    
+    public async Task InitializeAsync() {
+        await _playerState.InitializeAsync();
         
         if (_playerState.NoValue()) {
             _playerState.SetRaw(PlayerState.Initial);  
