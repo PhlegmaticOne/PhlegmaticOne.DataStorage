@@ -8,76 +8,18 @@
 
 ```cs
 public class DataStorageInstaller : MonoInstaller {
-    [SerializeField] private DataStorageConfigBase _dataStorageConfig;
-    [SerializeField] private ChangeTrackerConfig _changeTrackerConfig;
+    [SerializeField] private DataStorageMonoProvider _dataStorageProvider;
 
-    private class DataStorageFactory : IFactory<DataStorage> {
-        private readonly IDataSourceFactory _dataSourceFactory;
-        private readonly IList<IService> _services;
-
-        public DataStorageFactory(IDataSourceFactory dataSourceFactory, IList<IService> services) {
-            _dataSourceFactory = dataSourceFactory;
-            _services = services;
-        }
-        
-        public DataStorage Create() {
-            var set = new DataSourcesSet(_dataSourceFactory);
-            return new DataStorage(set, _services);
-        }
-    }
-    
-    private class ChangeTrackerTimeIntervalFactory : IFactory<ChangeTrackerTimeInterval> {
-        private readonly DataStorage _dataStorage;
-        private readonly ChangeTrackerConfiguration _configuration;
-        private readonly IChangeTrackerLogger _changeTrackerLogger;
-
-        public ChangeTrackerTimeIntervalFactory(
-            DataStorage dataStorage,
-            ChangeTrackerConfiguration configuration,
-            IChangeTrackerLogger changeTrackerLogger) {
-            _dataStorage = dataStorage;
-            _configuration = configuration;
-            _changeTrackerLogger = changeTrackerLogger;
-        }
-        
-        public ChangeTrackerTimeInterval Create() {
-            return new ChangeTrackerTimeInterval(_dataStorage, _configuration, _changeTrackerLogger);
-        }
-    }
-    
     public override void InstallBindings() {
+        _dataStorageProvider.Initialize();
+        _dataStorageProvider.StartChangeTracker();
         BindDataStorage();
-        BindChangeTracker();
-        BindDataSourcesSet();
-        BindApplicationServices();
     }
 
     private void BindDataStorage() {
-        Container.BindInterfacesAndSelfTo<DataStorage>().FromFactory<DataStorage, DataStorageFactory>().AsSingle();
-    }
-
-    private void BindChangeTracker() {
-        var configuration = _changeTrackerConfig.GetChangeTrackerConfig();
-        Container.Bind<ChangeTrackerConfiguration>().FromInstance(configuration).AsSingle();
-        Container.Bind<IChangeTrackerLogger>().To<ChangeTrackerLoggerDebug>().AsSingle();
-        Container.BindInterfacesTo<ChangeTrackerTimeInterval>()
-            .FromFactory<ChangeTrackerTimeInterval, ChangeTrackerTimeIntervalFactory>()
+        Container.BindInterfacesAndSelfTo<DataStorage>()
+            .FromInstance(_dataStorageProvider.DataStorage)
             .AsSingle();
-    }
-
-    private void BindDataSourcesSet() {
-        var sourceFactory = _dataStorageConfig.GetSourceFactory();
-        Container.BindInstance(sourceFactory).AsSingle();
-    }
-
-    private void BindApplicationServices() {
-        var serviceType = typeof(IService);
-        var types = Assembly.GetAssembly(typeof(DataStorageInstaller)).GetTypes()
-            .Where(x => serviceType.IsAssignableFrom(x) && x.IsAbstract == false);
-        
-        foreach (var type in types) {
-            Container.BindInterfacesTo(type).AsSingle();
-        }
     }
 }
 ```
@@ -201,47 +143,26 @@ Package includes following storages and their configs:
 
 Available at Create -> Data Storage -> Storages -> {StorageType}
 
-## Script for initializing DataStorage and ChangeTracker
+## Data Storage Provider config
 
-```cs
-public class DataStorageProvider : MonoBehaviour {
-    [SerializeField] private DataStorageConfigBase _dataStorageConfig;
-    [SerializeField] private ChangeTrackerConfig _changeTrackerConfig;
+![image](https://github.com/PhlegmaticOne/PhlegmaticOne.DataStorage/assets/73738250/73fcbe68-3916-4643-bff6-34fc40ad2d67)
 
-    private IChangeTracker _changeTracker;
-    public IDataStorage DataStorage { get; private set; }
-    public CancellationTokenSource TokenSource { get; private set; }
-    
-    public void Initialize() {
-        var set = new DataSourcesSet(_dataStorageConfig.GetSourceFactory());
-        var changeTrackerConfig = _changeTrackerConfig.GetChangeTrackerConfig();
-        
-        var dataStorage = new DataStorage(set);
-        var logger = new ChangeTrackerLoggerDebug(changeTrackerConfig);
-        
-        DataStorage = dataStorage;
-        TokenSource = new CancellationTokenSource();
-        _changeTracker = new ChangeTrackerTimeInterval(dataStorage, changeTrackerConfig, logger);
-    }
+Includes Change Tracker config and Storage configs. Storage configs can have multiple configs, but for DataStorage instantiation the **_first_ config will be used**
 
-    private void Start() {
-        _changeTracker.TrackAsync(TokenSource.Token);
-    }
+# Setup from Editor
 
-    private void OnDestroy() {
-        TokenSource.Cancel();
-    }
-}
-```
+## Test scene
 
-## Setup from Editor
+![image](https://github.com/PhlegmaticOne/PhlegmaticOne.DataStorage/assets/73738250/2af5b842-03df-4da9-ab1b-cddfcd2afe4c)
 
-![image](https://github.com/PhlegmaticOne/PhlegmaticOne.DataStorage/assets/73738250/93f06280-0199-4e40-a9b6-5cf6ddc5c916)
+## Test scripts on GameObject
+
+![image](https://github.com/PhlegmaticOne/PhlegmaticOne.DataStorage/assets/73738250/9336883a-6b86-42c6-82c8-67e477d54e2d)
 
 ## Test script
 ```cs
 public class SampleDataStorageUsage : MonoBehaviour {
-    [SerializeField] private DataStorageProvider _dataStorageProvider;
+    [SerializeField] private DataStorageMonoProvider _dataStorageProvider;
     [SerializeField] private Button _addCoinsButton;
     [SerializeField] private Button _subtractCoinsButton;
     [SerializeField] private Text _infoText;
@@ -253,12 +174,14 @@ public class SampleDataStorageUsage : MonoBehaviour {
         _dataStorageProvider.Initialize();
         _addCoinsButton.onClick.AddListener(AddCoins);
         _subtractCoinsButton.onClick.AddListener(SubtractCoins);
-        _playerCurrencyService = new PlayerCurrencyService(_dataStorageProvider.DataStorage);
+
+        var playerState = _dataStorageProvider.NewValueSource<PlayerState>();
+        _playerCurrencyService = new PlayerCurrencyService(playerState);
     }
 
     private async void Start() {
-        var token = _dataStorageProvider.TokenSource.Token;
-        await _playerCurrencyService.InitializeAsync(token);
+        _dataStorageProvider.StartChangeTracker();
+        await _playerCurrencyService.InitializeAsync();
         UpdateInfoText();
     }
     
