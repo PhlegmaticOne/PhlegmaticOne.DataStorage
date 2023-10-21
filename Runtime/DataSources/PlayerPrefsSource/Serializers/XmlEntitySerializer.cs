@@ -6,7 +6,7 @@ namespace PhlegmaticOne.DataStorage.DataSources.PlayerPrefsSource.Serializers {
     public sealed class XmlEntitySerializer : IEntitySerializer {
         public string Serialize<T>(T value) {
             var xmlSerializer = new DataContractSerializer(typeof(T));
-            var memoryStream = new MemoryStream();
+            using var memoryStream = new MemoryStream();
             xmlSerializer.WriteObject(memoryStream, value);
             var serialized = Encoding.UTF8.GetString(memoryStream.ToArray());
             return serialized;

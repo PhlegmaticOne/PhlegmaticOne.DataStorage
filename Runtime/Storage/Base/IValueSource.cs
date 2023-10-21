@@ -5,6 +5,7 @@ namespace PhlegmaticOne.DataStorage.Storage.Base {
     public interface IValueSource {
         int TrackedChanges { get; }
         string DisplayName { get; }
+        Task InitializeAsync(CancellationToken cancellationToken = default);
         Task SaveChangesAsync(CancellationToken cancellationToken = default);
     }
 

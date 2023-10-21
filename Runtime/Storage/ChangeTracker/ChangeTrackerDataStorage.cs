@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using PhlegmaticOne.DataStorage.Configs;
 using PhlegmaticOne.DataStorage.Infrastructure.Helpers;
 using PhlegmaticOne.DataStorage.Storage.ChangeTracker.Base;
 
@@ -10,12 +11,11 @@ namespace PhlegmaticOne.DataStorage.Storage.ChangeTracker {
         protected readonly ChangeTrackerConfiguration Configuration;
         protected readonly IChangeTrackerLogger Logger;
 
-        protected ChangeTrackerDataStorage(DataStorage dataStorage, 
-            ChangeTrackerConfiguration configuration,
-            IChangeTrackerLogger logger) {
+        protected ChangeTrackerDataStorage(DataStorage dataStorage, IChangeTrackerConfig config) {
+            ExceptionHelper.EnsureNotNull(config, nameof(config));
             _dataStorage = ExceptionHelper.EnsureNotNull(dataStorage);
-            Logger = ExceptionHelper.EnsureNotNull(logger);
-            Configuration = ExceptionHelper.EnsureNotNull(configuration);
+            Logger = ExceptionHelper.EnsureNotNull(config.GetLogger());
+            Configuration = ExceptionHelper.EnsureNotNull(config.GetChangeTrackerConfig());
         }
 
         public abstract Task TrackAsync(CancellationToken cancellationToken = default);

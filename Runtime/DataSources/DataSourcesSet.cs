@@ -15,17 +15,17 @@ namespace PhlegmaticOne.DataStorage.DataSources {
         }
 
         public DataSourceBase<T> Source<T>() where T: class, IModel {
-            if (_sources.TryGetValue(typeof(T), out var dataNode)) {
-                return (DataSourceBase<T>)dataNode;
+            if (_sources.TryGetValue(typeof(T), out var dataSource)) {
+                return (DataSourceBase<T>)dataSource;
             }
 
             return CreateNewSource<T>();
         }
 
         private DataSourceBase<T> CreateNewSource<T>() where T: class, IModel {
-            var node = _dataSourceFactory.CreateDataSource<T>();
-            _sources.Add(typeof(T), node);
-            return node;
+            var dataSource = _dataSourceFactory.CreateDataSource<T>();
+            _sources.Add(typeof(T), dataSource);
+            return dataSource;
         }
     }
 }

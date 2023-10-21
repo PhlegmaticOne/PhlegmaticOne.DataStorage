@@ -250,11 +250,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 390498581}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 59c3ed20ed874cda89765aa2f305604b, type: 3}
+  m_Script: {fileID: 11500000, guid: 3f058a2be28640f2acc8e39af954380e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _dataStorageConfig: {fileID: 11400000, guid: eff02f5af6d149d28d27602dda27d75d, type: 2}
-  _changeTrackerConfig: {fileID: 11400000, guid: 2bf5c2f35dce4c8a9bace93cf9aa967c, type: 2}
+  _dataStorageProviderConfig: {fileID: 11400000, guid: ca219972a03619b40a73f55f82835496, type: 2}
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0

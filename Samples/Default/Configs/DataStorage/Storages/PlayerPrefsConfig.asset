@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: PlayerPrefsConfig
   m_EditorClassIdentifier: 
   _serializerType: 0
-  _keyResolverConfiguration: {fileID: 11400000, guid: f9895e45c0c943745ab23d3b22d3ae97, type: 2}
+  _keyResolverConfiguration: {fileID: 11400000, guid: b01d080a55ab438a9b4b67655511bbbe, type: 2}

@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using PhlegmaticOne.DataStorage.Configs;
 using PhlegmaticOne.DataStorage.Infrastructure.Exceptions;
 using UnityEngine;
 
 namespace PhlegmaticOne.DataStorage.Storage.ChangeTracker {
     public class ChangeTrackerTimeInterval : ChangeTrackerDataStorage {
-        public ChangeTrackerTimeInterval(
-            DataStorage dataStorage, ChangeTrackerConfiguration configuration, IChangeTrackerLogger logger) : 
-            base(dataStorage, configuration, logger) { }
+        public ChangeTrackerTimeInterval(DataStorage dataStorage, IChangeTrackerConfig config) : 
+            base(dataStorage, config) { }
 
         public override async Task TrackAsync(CancellationToken cancellationToken = default) {
             try {

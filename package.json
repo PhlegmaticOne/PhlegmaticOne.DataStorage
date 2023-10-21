@@ -1,6 +1,6 @@
 {
   "name": "com.phlegmaticone.datastorage",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "displayName": "Data Storage",
   "description": "Data storage for Unity with PlayerPrefs and Files support",
   "unity": "2020.3",

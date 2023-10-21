@@ -8,10 +8,10 @@ using PhlegmaticOne.DataStorage.KeyResolvers.Base;
 using UnityEngine;
 
 namespace PhlegmaticOne.DataStorage.DataSources.PlayerPrefsSource {
-    internal sealed class PlayerPrefsDataSource<T> : DataSourceBase<T> where T: class, IModel {
-        private readonly IEntitySerializer _entitySerializer;
+    public sealed class PlayerPrefsDataSource<T> : DataSourceBase<T> where T: class, IModel {
         private readonly IKeyResolver _keyResolver;
-
+        private readonly IEntitySerializer _entitySerializer;
+        
         public PlayerPrefsDataSource(IEntitySerializer entitySerializer, IKeyResolver keyResolver) {
             _entitySerializer = ExceptionHelper.EnsureNotNull(entitySerializer, nameof(entitySerializer));
             _keyResolver = ExceptionHelper.EnsureNotNull(keyResolver, nameof(keyResolver));
@@ -29,16 +29,15 @@ namespace PhlegmaticOne.DataStorage.DataSources.PlayerPrefsSource {
             return Task.CompletedTask;
         }
 
-        public override async Task<T> ReadAsync(CancellationToken cancellationToken = default) {
+        public override Task<T> ReadAsync(CancellationToken cancellationToken = default) {
             var key = _keyResolver.ResolveKey<T>();
             var entityString = PlayerPrefs.GetString(key, string.Empty);
-            
-            if (string.IsNullOrEmpty(entityString)) {
-                return default;
-            }
 
-            var parsed = await Task.Run(() => _entitySerializer.Deserialize<T>(entityString), cancellationToken); 
-            return parsed;
+            if (string.IsNullOrEmpty(entityString)) {
+                return Task.FromResult(default(T));
+            }
+            
+            return Task.Run(() => _entitySerializer.Deserialize<T>(entityString), cancellationToken);
         }
     }
 }

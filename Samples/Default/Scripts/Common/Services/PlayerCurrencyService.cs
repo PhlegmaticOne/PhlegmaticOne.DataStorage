@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading;
 using System.Threading.Tasks;
 using Common.Models;
 using PhlegmaticOne.DataStorage.Storage;
@@ -7,15 +6,14 @@ using PhlegmaticOne.DataStorage.Storage.Base;
 
 namespace Common.Services {
     public class PlayerCurrencyService : IPlayerCurrencyService {
-        private readonly IDataStorage _dataStorage;
-        private IValueSource<PlayerState> _playerState;
+        private readonly IValueSource<PlayerState> _playerState;
 
-        public PlayerCurrencyService(IDataStorage dataStorage) {
-            _dataStorage = dataStorage;
+        public PlayerCurrencyService(IValueSource<PlayerState> playerState) {
+            _playerState = playerState;
         }
         
-        public async Task InitializeAsync(CancellationToken cancellationToken) {
-            _playerState = await _dataStorage.ReadAsync<PlayerState>(cancellationToken);
+        public async Task InitializeAsync() {
+            await _playerState.InitializeAsync();
             
             if (_playerState.NoValue()) {
                 _playerState.SetRaw(PlayerState.Initial);  

@@ -1,11 +1,12 @@
 ﻿using Common.Models;
 using Common.Services;
+using PhlegmaticOne.DataStorage.Provider;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace DefaultUsage {
     public class SampleDataStorageUsage : MonoBehaviour {
-        [SerializeField] private DataStorageProvider _dataStorageProvider;
+        [SerializeField] private DataStorageMonoProvider _dataStorageProvider;
         [SerializeField] private Button _addCoinsButton;
         [SerializeField] private Button _subtractCoinsButton;
         [SerializeField] private Text _infoText;
@@ -17,12 +18,14 @@ namespace DefaultUsage {
             _dataStorageProvider.Initialize();
             _addCoinsButton.onClick.AddListener(AddCoins);
             _subtractCoinsButton.onClick.AddListener(SubtractCoins);
-            _playerCurrencyService = new PlayerCurrencyService(_dataStorageProvider.DataStorage);
+
+            var playerState = _dataStorageProvider.NewValueSource<PlayerState>();
+            _playerCurrencyService = new PlayerCurrencyService(playerState);
         }
 
         private async void Start() {
-            var token = _dataStorageProvider.TokenSource.Token;
-            await _playerCurrencyService.InitializeAsync(token);
+            _dataStorageProvider.StartChangeTracker();
+            await _playerCurrencyService.InitializeAsync();
             UpdateInfoText();
         }
         

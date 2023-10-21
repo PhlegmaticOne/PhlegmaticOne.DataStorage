@@ -4,7 +4,7 @@ using PhlegmaticOne.DataStorage.Contracts;
 using PhlegmaticOne.DataStorage.DataSources.Base;
 
 namespace PhlegmaticOne.DataStorage.DataSources.InMemorySource {
-    internal sealed class InMemoryDataSource<T> : DataSourceBase<T> where T: class, IModel {
+    public sealed class InMemoryDataSource<T> : DataSourceBase<T> where T: class, IModel {
         private T _inMemoryValue;
 
         protected override Task WriteAsync(T value, CancellationToken cancellationToken = default) {
