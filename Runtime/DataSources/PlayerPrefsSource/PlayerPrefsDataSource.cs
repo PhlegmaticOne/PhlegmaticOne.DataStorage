@@ -2,42 +2,56 @@
 using System.Threading.Tasks;
 using PhlegmaticOne.DataStorage.Contracts;
 using PhlegmaticOne.DataStorage.DataSources.Base;
+using PhlegmaticOne.DataStorage.DataSources.PlayerPrefsSource.Actions;
+using PhlegmaticOne.DataStorage.DataSources.PlayerPrefsSource.Crypto;
 using PhlegmaticOne.DataStorage.DataSources.PlayerPrefsSource.Serializers;
+using PhlegmaticOne.DataStorage.Infrastructure.Dispatcher;
 using PhlegmaticOne.DataStorage.Infrastructure.Helpers;
-using PhlegmaticOne.DataStorage.KeyResolvers.Base;
-using UnityEngine;
+using PhlegmaticOne.DataStorage.Infrastructure.KeyResolvers.Base;
 
 namespace PhlegmaticOne.DataStorage.DataSources.PlayerPrefsSource {
-    public sealed class PlayerPrefsDataSource<T> : DataSourceBase<T> where T: class, IModel {
+    public class PlayerPrefsDataSource<T> : IDataSource<T> where T: class, IModel {
+        private readonly IMainThreadDispatcher _mainThreadDispatcher;
         private readonly IKeyResolver _keyResolver;
         private readonly IEntitySerializer _entitySerializer;
+        private readonly IStringCryptoProvider _stringCryptoProvider;
         
-        public PlayerPrefsDataSource(IEntitySerializer entitySerializer, IKeyResolver keyResolver) {
+        public PlayerPrefsDataSource(IEntitySerializer entitySerializer,
+            IStringCryptoProvider stringCryptoProvider,
+            IMainThreadDispatcher mainThreadDispatcher, 
+            IKeyResolver keyResolver) {
+            _stringCryptoProvider = ExceptionHelper.EnsureNotNull(stringCryptoProvider, nameof(stringCryptoProvider));
+            _mainThreadDispatcher = ExceptionHelper.EnsureNotNull(mainThreadDispatcher, nameof(mainThreadDispatcher));
             _entitySerializer = ExceptionHelper.EnsureNotNull(entitySerializer, nameof(entitySerializer));
             _keyResolver = ExceptionHelper.EnsureNotNull(keyResolver, nameof(keyResolver));
         }
 
-        protected override async Task WriteAsync(T value, CancellationToken cancellationToken = default) {
-            var key = _keyResolver.ResolveKey<T>();
-            var entityString = await Task.Run(() => _entitySerializer.Serialize(value), cancellationToken);
-            PlayerPrefs.SetString(key, entityString);
+        public Task WriteAsync(T value, CancellationToken cancellationToken = default) {
+            return Task.Run(() => {
+                var key = _keyResolver.ResolveKey<T>();
+                var entityString = _entitySerializer.Serialize(value);
+                var encrypted = _stringCryptoProvider.Encrypt(entityString);
+                _mainThreadDispatcher.EnqueueForExecution(new MainThreadPlayerPrefsSetString(key, encrypted));
+            }, cancellationToken);
         }
 
-        public override Task DeleteAsync(CancellationToken cancellationToken = default) {
+        public Task DeleteAsync(CancellationToken cancellationToken = default) {
             var key = _keyResolver.ResolveKey<T>();
-            PlayerPrefs.DeleteKey(key);
-            return Task.CompletedTask;
+            return _mainThreadDispatcher.AwaitExecution(new MainThreadPlayerPrefsDeleteKey(key));
         }
 
-        public override Task<T> ReadAsync(CancellationToken cancellationToken = default) {
-            var key = _keyResolver.ResolveKey<T>();
-            var entityString = PlayerPrefs.GetString(key, string.Empty);
+        public Task<T> ReadAsync(CancellationToken cancellationToken = default) {
+            return Task.Run(async () => {
+                var key = _keyResolver.ResolveKey<T>();
+                var entityString = await _mainThreadDispatcher.AwaitExecution(new MainThreadPlayerPrefsGetString(key));
 
-            if (string.IsNullOrEmpty(entityString)) {
-                return Task.FromResult(default(T));
-            }
-            
-            return Task.Run(() => _entitySerializer.Deserialize<T>(entityString), cancellationToken);
+                if (string.IsNullOrEmpty(entityString)) {
+                    return default;
+                }
+
+                var decrypted = _stringCryptoProvider.Decrypt(entityString);
+                return _entitySerializer.Deserialize<T>(decrypted);
+            }, cancellationToken);
         }
     }
 }

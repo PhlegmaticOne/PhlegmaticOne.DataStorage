@@ -6,16 +6,13 @@ namespace PhlegmaticOne.DataStorage.Storage.ChangeTracker {
     public class ChangeTrackerConfiguration {
         [SerializeField] private float _timeInterval;
         [SerializeField] private float _timeDelay;
-        [SerializeField] private bool _isChangeTrackerVerbose;
 
-        public ChangeTrackerConfiguration(float timeInterval, float timeDelay, bool isChangeTrackerVerbose) {
+        public ChangeTrackerConfiguration(float timeInterval, float timeDelay) {
             _timeInterval = timeInterval;
             _timeDelay = timeDelay;
-            _isChangeTrackerVerbose = isChangeTrackerVerbose;
         }
-        
+
         public float TimeInterval => _timeInterval;
         public float TimeDelay => _timeDelay;
-        public bool IsChangeTrackerVerbose => _isChangeTrackerVerbose;
     }
 }

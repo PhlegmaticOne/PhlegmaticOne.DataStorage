@@ -5,25 +5,27 @@ using PhlegmaticOne.DataStorage.DataSources.Base;
 using PhlegmaticOne.DataStorage.Infrastructure.Helpers;
 
 namespace PhlegmaticOne.DataStorage.DataSources {
-    public sealed class DataSourcesSet {
+    public class DataSourcesSet {
+        private readonly DataSourceFactoryContext _factoryContext;
         private readonly IDataSourceFactory _dataSourceFactory;
         private readonly Dictionary<Type, IDataSource> _sources;
 
-        public DataSourcesSet(IDataSourceFactory dataSourceFactory) {
+        public DataSourcesSet(IDataSourceFactory dataSourceFactory, DataSourceFactoryContext factoryContext) {
+            _factoryContext = ExceptionHelper.EnsureNotNull(factoryContext, nameof(factoryContext));
             _dataSourceFactory = ExceptionHelper.EnsureNotNull(dataSourceFactory, nameof(dataSourceFactory));
             _sources = new Dictionary<Type, IDataSource>();
         }
 
-        public DataSourceBase<T> Source<T>() where T: class, IModel {
+        public IDataSource<T> Source<T>() where T: class, IModel {
             if (_sources.TryGetValue(typeof(T), out var dataSource)) {
-                return (DataSourceBase<T>)dataSource;
+                return (IDataSource<T>)dataSource;
             }
 
             return CreateNewSource<T>();
         }
 
-        private DataSourceBase<T> CreateNewSource<T>() where T: class, IModel {
-            var dataSource = _dataSourceFactory.CreateDataSource<T>();
+        private IDataSource<T> CreateNewSource<T>() where T: class, IModel {
+            var dataSource = _dataSourceFactory.CreateDataSource<T>(_factoryContext);
             _sources.Add(typeof(T), dataSource);
             return dataSource;
         }

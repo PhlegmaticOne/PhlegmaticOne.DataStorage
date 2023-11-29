@@ -2,7 +2,7 @@
 using UnityEngine;
 
 namespace PhlegmaticOne.DataStorage.DataSources.FileSource.Options {
-    public sealed class FileOptionsAppPersistentPath : IFileOptions {
+    public class FileOptionsAppPersistentPath : IFileOptions {
         private readonly string _directoryName;
         private readonly string _persistentDataPath;
         public FileOptionsAppPersistentPath(string directoryName) {

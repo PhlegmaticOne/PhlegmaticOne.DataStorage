@@ -1,11 +1,12 @@
 {
   "name": "com.phlegmaticone.datastorage",
-  "version": "1.0.7",
+  "version": "1.1.0",
   "displayName": "Data Storage",
   "description": "Data storage for Unity with PlayerPrefs and Files support",
   "unity": "2020.3",
   "dependencies": {
-    "com.unity.nuget.newtonsoft-json": "3.0.2"
+    "com.unity.nuget.newtonsoft-json": "3.0.2",
+    "com.unity.textmeshpro": "3.0.6"
   },
   "keywords": [
     "Data",
@@ -17,7 +18,21 @@
     "Saving",
     "Saves",
     "Persistent",
-    "Serialization"
+    "Serialization",
+    "Encryption",
+    "Decryption"
+  ],
+  "samples": [
+    {
+      "displayName": "Simple usage",
+      "description": "Contains simple usage of DataStorage - ChangeTracker is tracking user changes, DataStorage is saving changes, current state of operations queue is displaying on UI",
+      "path": "Samples~/SimpleUsage"
+    },
+    {
+      "displayName": "Load test",
+      "description": "Contains load test of DataStorage - several producers frequently put new data for saving, DataStorage is saving changes, current state of operations queue is displaying on UI",
+      "path": "Samples~/LoadTest"
+    }
   ],
   "author": {
     "name": "Aleksandr Krotov",

@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1ea184468c845574f87879fd654a6bf6, type: 3}
+  m_Name: PlayerPrefsConfigDataStorage
+  m_EditorClassIdentifier: 
+  _serializerConfig: {fileID: 11400000, guid: addc57e973d9a3c4aa96228617627836, type: 2}
+  _keyResolverConfig: {fileID: 11400000, guid: b01d080a55ab438a9b4b67655511bbbe, type: 2}
+  _cryptoConfig: {fileID: 11400000, guid: 0f5bdf68cdd471f4cb55fe959f50036a, type: 2}

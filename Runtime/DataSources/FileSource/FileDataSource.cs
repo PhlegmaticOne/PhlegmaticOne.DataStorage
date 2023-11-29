@@ -4,36 +4,35 @@ using System.Threading.Tasks;
 using PhlegmaticOne.DataStorage.Contracts;
 using PhlegmaticOne.DataStorage.DataSources.Base;
 using PhlegmaticOne.DataStorage.DataSources.FileSource.Options;
-using PhlegmaticOne.DataStorage.DataSources.FileSource.Serializers;
+using PhlegmaticOne.DataStorage.DataSources.FileSource.Serializers.Base;
 using PhlegmaticOne.DataStorage.Infrastructure.Helpers;
-using PhlegmaticOne.DataStorage.KeyResolvers.Base;
+using PhlegmaticOne.DataStorage.Infrastructure.KeyResolvers.Base;
 
 namespace PhlegmaticOne.DataStorage.DataSources.FileSource {
-    public sealed class FileDataSource<T> : DataSourceBase<T> where T: class, IModel {
+    public class FileDataSource<T> : IDataSource<T> where T: class, IModel {
         private readonly IFileSerializer _fileSerializer;
         private readonly IFileOptions _fileOptions;
         private readonly IKeyResolver _keyResolver;
+        private readonly string _filePath;
 
         public FileDataSource(IFileSerializer fileSerializer, IFileOptions fileOptions, IKeyResolver keyResolver) {
             _fileSerializer = ExceptionHelper.EnsureNotNull(fileSerializer, nameof(fileSerializer));
             _fileOptions = ExceptionHelper.EnsureNotNull(fileOptions, nameof(fileOptions));
             _keyResolver = ExceptionHelper.EnsureNotNull(keyResolver, nameof(keyResolver));
+            _filePath = GetFilePath();
             EnsurePersistentDirectoryExists();
         }
 
-        protected override Task WriteAsync(T value, CancellationToken cancellationToken = default) {
-            var filePath = GetFilePath();
-            return Task.Run(() => SerializeObjectIntoFile(filePath, value), cancellationToken);
+        public Task WriteAsync(T value, CancellationToken cancellationToken = default) {
+            return Task.Run(() => SerializeObjectIntoFile(_filePath, value), cancellationToken);
         }
 
-        public override Task DeleteAsync(CancellationToken cancellationToken = default) {
-            var filePath = GetFilePath();
-            return Task.Run(() => File.Delete(filePath), cancellationToken);
+        public Task DeleteAsync(CancellationToken cancellationToken = default) {
+            return Task.Run(() => File.Delete(_filePath), cancellationToken);
         }
 
-        public override Task<T> ReadAsync(CancellationToken cancellationToken = default) {
-            var filePath = GetFilePath();
-            return Task.Run(() => DeserializeObjectFromFile(filePath), cancellationToken);
+        public Task<T> ReadAsync(CancellationToken cancellationToken = default) {
+            return Task.Run(() => DeserializeObjectFromFile(_filePath), cancellationToken);
         }
 
         private T DeserializeObjectFromFile(string filePath) {
@@ -60,6 +59,7 @@ namespace PhlegmaticOne.DataStorage.DataSources.FileSource {
 
         private void EnsurePersistentDirectoryExists() {
             var path = _fileOptions.PersistentPath;
+            
             if (Directory.Exists(path) == false) {
                 Directory.CreateDirectory(path);
             }

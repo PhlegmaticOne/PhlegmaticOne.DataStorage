@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: af83a7a05282455bbc456e76a8ece7e0, type: 3}
+  m_Name: DataStorageProviderConfig
+  m_EditorClassIdentifier: 
+  _loggerConfig: {fileID: 11400000, guid: e9359b5df1990af4395d7b6784633de1, type: 2}
+  _changeTrackerConfig: {fileID: 11400000, guid: 3e1de1aad1d82004bbc87b634442aefd, type: 2}
+  _dataStorageConfig: {fileID: 11400000, guid: d570be77a478add46a9020d9a1b4a1f0, type: 2}
+  _operationsQueueConfig: {fileID: 11400000, guid: e399eda6048ee1a47b9216583ae22ebe, type: 2}

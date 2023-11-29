@@ -1,87 +1,110 @@
-﻿using System.Collections.Generic;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using KeyedSemaphores;
-using PhlegmaticOne.DataStorage.Configs;
 using PhlegmaticOne.DataStorage.Contracts;
 using PhlegmaticOne.DataStorage.DataSources;
+using PhlegmaticOne.DataStorage.Infrastructure.Cancellation;
 using PhlegmaticOne.DataStorage.Infrastructure.Helpers;
 using PhlegmaticOne.DataStorage.Storage.Base;
+using PhlegmaticOne.DataStorage.Storage.ChangeTracker;
+using PhlegmaticOne.DataStorage.Storage.Queue.Base;
+using PhlegmaticOne.DataStorage.Storage.Queue.Observer;
+using PhlegmaticOne.DataStorage.Storage.Queue.Operations;
+using PhlegmaticOne.DataStorage.Storage.ValueSources;
 
 namespace PhlegmaticOne.DataStorage.Storage {
     public class DataStorage : IDataStorage {
+        private static readonly object Sync = new object();
+        
+        private readonly IDataStorageLogger _logger;
         private readonly DataSourcesSet _dataSourcesSet;
-        private readonly Dictionary<string, IValueSource> _valueSources;
-        private CancellationToken _cancellationToken;
+        private readonly IOperationsQueue _operationsQueue;
+        private readonly ValueSourceCollection _valueSourceCollection;
+        private readonly CancellationTokenSource _cancellationTokenSource;
         
-        public DataStorage(DataSourcesSet dataSourcesSet) {
+        public DataStorage(
+            IDataStorageLogger logger,
+            DataSourcesSet dataSourcesSet,
+            IOperationsQueue operationsQueue,
+            CancellationTokenSource cts) {
+            _valueSourceCollection = new ValueSourceCollection();
+            _logger = ExceptionHelper.EnsureNotNull(logger, nameof(logger));
+            _cancellationTokenSource = ExceptionHelper.EnsureNotNull(cts, nameof(cts));
             _dataSourcesSet = ExceptionHelper.EnsureNotNull(dataSourcesSet, nameof(dataSourcesSet));
-            _valueSources = new Dictionary<string, IValueSource>();
+            _operationsQueue = ExceptionHelper.EnsureNotNull(operationsQueue, nameof(operationsQueue));
         }
 
-        public static DataStorage FromConfig(IDataStorageSourceFactoryConfig dataStorageSourceFactoryConfig) {
-            var dataSourceFactory = dataStorageSourceFactoryConfig.GetSourceFactory();
-            var dataSourcesSet = new DataSourcesSet(dataSourceFactory);
-            return new DataStorage(dataSourcesSet);
+        public Task<T> ReadAsync<T>(CancellationToken ct = default) where T: class, IModel {
+            try {
+                using var tokenSource = _cancellationTokenSource.LinkWith(ct);
+                var source = _dataSourcesSet.Source<T>();
+                return source.ReadAsync(tokenSource.Token);
+            }
+            catch (Exception exception) {
+                _logger.LogException(exception);
+                return Task.FromException<T>(exception);
+            }
         }
 
-        public DataStorage WithCancellation(CancellationToken cancellationToken) {
-            _cancellationToken = cancellationToken;
-            return this;
-        }
-        
-        public async Task SaveAsync<T>(T value, CancellationToken ct = default) where T: class, IModel {
-            var key = LockKey<T>();
-            var token = Token(ct);
-            using var _ = await KeyedSemaphore.LockAsync(key, ct);
-            var source = _dataSourcesSet.Source<T>();
-            await source.WriteAsync(value, token);
+        public Task SaveAsync<T>(T value, CancellationToken ct = default) where T : class, IModel {
+            try {
+                using var tokenSource = _cancellationTokenSource.LinkWith(ct);
+                var source = _dataSourcesSet.Source<T>();
+                return source.WriteAsync(value, tokenSource.Token);
+            }
+            catch (Exception exception) {
+                _logger.LogException(exception);
+                return Task.FromException(exception);
+            }
         }
 
-        public async Task<IValueSource<T>> ReadAsync<T>(CancellationToken ct = default) where T: class, IModel {
-            var key = LockKey<T>();
-            var token = Token(ct);
-            using var _ = await KeyedSemaphore.LockAsync(key, token);
-            
-            if (_valueSources.TryGetValue(key, out var cached)) {
-                return (IValueSource<T>)cached;
+        public Task DeleteAsync<T>(CancellationToken ct = default) where T: class, IModel {
+            try {
+                using var tokenSource = _cancellationTokenSource.LinkWith(ct);
+                var source = _dataSourcesSet.Source<T>();
+                return source.DeleteAsync(tokenSource.Token);
+            }
+            catch (Exception exception) {
+                _logger.LogException(exception);
+                return Task.FromException(exception);
+            }
+        }
+
+        public IValueSource<T> GetOrCreateValueSource<T>() where T: class, IModel {
+            if (_valueSourceCollection.TryGet<T>(out var existing)) {
+                return existing;
             }
             
-            var source = _dataSourcesSet.Source<T>();
-            var value = await source.ReadAsync(token);
-            var valueSource = new ValueSource<T>(this, value);
-            _valueSources.Add(key, valueSource);
+            var valueSource = new ValueSource<T>(this);
+            _valueSourceCollection.Add(valueSource);
             return valueSource;
         }
 
-        public async Task<T> ReadRawValueAsync<T>(CancellationToken ct = default) where T : class, IModel {
-            var key = LockKey<T>();
-            var token = Token(ct);
-            using var _ = await KeyedSemaphore.LockAsync(key, token);
-            var source = _dataSourcesSet.Source<T>();
-            return await source.ReadAsync(token);
+        public IOperationsQueueObserver GetQueueObserver() => _operationsQueue;
+
+        public void EnqueueForSaving<T>(IValueSource<T> value, CancellationToken ct = default) where T : class, IModel {
+            var operation = new QueueOperationSaveState<T>(value, _logger, this);
+            _operationsQueue.EnqueueOperation(operation, ct);
         }
 
-        public async Task DeleteAsync<T>(CancellationToken ct = default) where T: class, IModel {
-            var key = LockKey<T>();
-            var token = Token(ct);
-            using var _ = await KeyedSemaphore.LockAsync(key, token);
-            var source = _dataSourcesSet.Source<T>();
-            await source.DeleteAsync(token);
+        public void EnqueueForDeleting<T>(CancellationToken ct = default) where T : class, IModel {
+            var operation = new QueueOperationDeleteState<T>(this);
+            _operationsQueue.EnqueueOperation(operation, ct);
         }
 
-        internal ICollection<IValueSource> ValueSources => _valueSources.Values;
-        
-        internal void AddValueSource<T>(IValueSource<T> valueSource) {
-            var key = LockKey<T>();
-            using var _ = KeyedSemaphore.Lock(key);
-            
-            if (_valueSources.ContainsKey(key) == false) {
-                _valueSources.Add(key, valueSource);
+        public void RequestTrackedChangesSaving() {
+            lock (Sync) {
+                foreach (var source in _valueSourceCollection) {
+                    var valueSource = source.Value;
+
+                    if (valueSource.HasChanges() == false) {
+                        continue;
+                    }
+                
+                    _logger.LogTrackedChanges(valueSource);
+                    valueSource.EnqueueForSaving();
+                }
             }
         }
-
-        private CancellationToken Token(CancellationToken ct) => ct == default ? _cancellationToken : ct;
-        private static string LockKey<T>() => typeof(T).Name;
     }
 }

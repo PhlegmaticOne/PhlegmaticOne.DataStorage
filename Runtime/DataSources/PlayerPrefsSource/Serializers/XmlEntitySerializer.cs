@@ -3,7 +3,7 @@ using System.Runtime.Serialization;
 using System.Text;
 
 namespace PhlegmaticOne.DataStorage.DataSources.PlayerPrefsSource.Serializers {
-    public sealed class XmlEntitySerializer : IEntitySerializer {
+    public class XmlEntitySerializer : IEntitySerializer {
         public string Serialize<T>(T value) {
             var xmlSerializer = new DataContractSerializer(typeof(T));
             using var memoryStream = new MemoryStream();

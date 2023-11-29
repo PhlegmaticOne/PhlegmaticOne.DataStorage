@@ -2,6 +2,6 @@
 
 namespace PhlegmaticOne.DataStorage.DataSources.Base {
     public interface IDataSourceFactory {
-        DataSourceBase<T> CreateDataSource<T>() where T: class, IModel;
+        IDataSource<T> CreateDataSource<T>(DataSourceFactoryContext context) where T: class, IModel;
     }
 }

@@ -1,8 +1,11 @@
 ﻿using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
+using PhlegmaticOne.DataStorage.DataSources.FileSource.Serializers.Base;
 
 namespace PhlegmaticOne.DataStorage.DataSources.FileSource.Serializers {
-    public sealed class BinaryFileSerializer : IFileSerializer {
+    public class BinaryFileSerializer : IFileSerializer {
+        public string FileExtension => ".dat";
+
         public void Serialize<T>(Stream stream, T value) {
             var serializer = new BinaryFormatter();
             serializer.Serialize(stream, value);
@@ -12,7 +15,5 @@ namespace PhlegmaticOne.DataStorage.DataSources.FileSource.Serializers {
             var deserializer = new BinaryFormatter();
             return (T)deserializer.Deserialize(stream);
         }
-
-        public string FileExtension => ".dat";
     }
 }

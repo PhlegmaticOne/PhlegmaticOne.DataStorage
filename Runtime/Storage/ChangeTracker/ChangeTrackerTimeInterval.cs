@@ -1,38 +1,80 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using PhlegmaticOne.DataStorage.Configs;
-using PhlegmaticOne.DataStorage.Infrastructure.Exceptions;
-using UnityEngine;
+using PhlegmaticOne.DataStorage.Infrastructure.Cancellation;
+using PhlegmaticOne.DataStorage.Infrastructure.Helpers;
+using PhlegmaticOne.DataStorage.Storage.Base;
+using PhlegmaticOne.DataStorage.Storage.ChangeTracker.Base;
 
 namespace PhlegmaticOne.DataStorage.Storage.ChangeTracker {
-    public class ChangeTrackerTimeInterval : ChangeTrackerDataStorage {
-        public ChangeTrackerTimeInterval(DataStorage dataStorage, IChangeTrackerConfig config) : 
-            base(dataStorage, config) { }
+    public class ChangeTrackerTimeInterval : IChangeTracker {
+        private const string CancellationSource = "ChangeTracker";
 
-        public override async Task TrackAsync(CancellationToken cancellationToken = default) {
+        private readonly IDataStorage _dataStorage;
+        private readonly IDataStorageLogger _logger;
+        private readonly ChangeTrackerConfiguration _configuration;
+        private readonly CancellationTokenSource _cancellationTokenSource;
+
+        private int _hasBeganTracking;
+        private int _isTracking;
+
+        public ChangeTrackerTimeInterval(IDataStorage dataStorage,
+            ChangeTrackerConfiguration changeTrackerConfig, 
+            IDataStorageLogger logger,
+            CancellationTokenSource cancellationTokenSource) {
+            _cancellationTokenSource = cancellationTokenSource;
+            _dataStorage = ExceptionHelper.EnsureNotNull(dataStorage);
+            _logger = ExceptionHelper.EnsureNotNull(logger, nameof(logger));
+            _configuration = ExceptionHelper.EnsureNotNull(changeTrackerConfig);
+            _isTracking = 1;
+        }
+
+        public void StopTracking() {
+            Interlocked.Exchange(ref _isTracking, 0);
+        }
+
+        public void ContinueTracking() {
+            Interlocked.Exchange(ref _isTracking, 1);
+        }
+
+        public async Task TrackAsync(CancellationToken cancellationToken = default) {
             try {
+                if (HasBeganTracking()) {
+                    return;
+                }
+                
                 await TrackChanges(cancellationToken);
             }
             catch (OperationCanceledException) {
-                Logger.LogCancellation();
+                _logger.LogCancellation(CancellationSource);
             }
-            catch (Exception e) {
-                Logger.LogError(e.Message);
-                Debug.LogException(new ChangeTrackerException(e));
+            catch (Exception exception) {
+                _logger.LogException(exception);
             }
         }
 
         private async Task TrackChanges(CancellationToken cancellationToken) {
-            var interval = TimeSpan.FromSeconds(Configuration.TimeInterval);
-            var delayTime = TimeSpan.FromSeconds(Configuration.TimeDelay);
+            using var tokenSource = _cancellationTokenSource.LinkWith(cancellationToken);
+            var token = tokenSource.Token;
+            var interval = TimeSpan.FromSeconds(_configuration.TimeInterval);
+            var delayTime = TimeSpan.FromSeconds(_configuration.TimeDelay);
             
             await Task.Delay(delayTime, cancellationToken);
 
-            while (!cancellationToken.IsCancellationRequested) {
-                await SaveChanges(cancellationToken);
-                await Task.Delay(interval, cancellationToken);
+            while (!token.IsCancellationRequested) {
+                if (IsTracking()) {
+                    _dataStorage.RequestTrackedChangesSaving();
+                }
+                await Task.Delay(interval, token);
             }
+        }
+
+        private bool IsTracking() {
+            return _isTracking == 1;
+        }
+
+        private bool HasBeganTracking() {
+            return Interlocked.CompareExchange(ref _hasBeganTracking, 1, 0) == 1;
         }
     }
 }
