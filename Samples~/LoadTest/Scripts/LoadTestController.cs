@@ -29,7 +29,7 @@ namespace LoadTest {
 
         private void OnApplicationQuit() {
             _queueTextLoggingController.OnReset();
-            _creationResult.TokenSource.Cancel();
+            _creationResult.CancellationProvider.Cancel();
         }        
     }
 }

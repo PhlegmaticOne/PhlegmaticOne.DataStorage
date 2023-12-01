@@ -35,7 +35,7 @@ namespace PhlegmaticOne.DataStorage.Configuration.Provider {
             return DataStorageProvider.CreateDataStorage(this);
         }
         
-        public void CreateAndSetupDefaultConfigs() {
+        internal void CreateAndSetupDefaultConfigs() {
             var rootDirectory = AssetUtils.GetAssetDirectory(this);
             ResetState(rootDirectory);
             

@@ -13,7 +13,7 @@ namespace PhlegmaticOne.DataStorage.Storage.ChangeTracker {
         private readonly IDataStorage _dataStorage;
         private readonly IDataStorageLogger _logger;
         private readonly ChangeTrackerConfiguration _configuration;
-        private readonly CancellationTokenSource _cancellationTokenSource;
+        private readonly IDataStorageCancellationProvider _cancellationProvider;
 
         private int _hasBeganTracking;
         private int _isTracking;
@@ -21,11 +21,11 @@ namespace PhlegmaticOne.DataStorage.Storage.ChangeTracker {
         public ChangeTrackerTimeInterval(IDataStorage dataStorage,
             ChangeTrackerConfiguration changeTrackerConfig, 
             IDataStorageLogger logger,
-            CancellationTokenSource cancellationTokenSource) {
-            _cancellationTokenSource = cancellationTokenSource;
-            _dataStorage = ExceptionHelper.EnsureNotNull(dataStorage);
+            IDataStorageCancellationProvider cancellationProvider) {
+            _cancellationProvider = ExceptionHelper.EnsureNotNull(cancellationProvider, nameof(cancellationProvider));
+            _dataStorage = ExceptionHelper.EnsureNotNull(dataStorage, nameof(dataStorage));
             _logger = ExceptionHelper.EnsureNotNull(logger, nameof(logger));
-            _configuration = ExceptionHelper.EnsureNotNull(changeTrackerConfig);
+            _configuration = ExceptionHelper.EnsureNotNull(changeTrackerConfig, nameof(dataStorage));
             _isTracking = 1;
         }
 
@@ -54,7 +54,7 @@ namespace PhlegmaticOne.DataStorage.Storage.ChangeTracker {
         }
 
         private async Task TrackChanges(CancellationToken cancellationToken) {
-            using var tokenSource = _cancellationTokenSource.LinkWith(cancellationToken);
+            using var tokenSource = _cancellationProvider.LinkWith(cancellationToken);
             var token = tokenSource.Token;
             var interval = TimeSpan.FromSeconds(_configuration.TimeInterval);
             var delayTime = TimeSpan.FromSeconds(_configuration.TimeDelay);

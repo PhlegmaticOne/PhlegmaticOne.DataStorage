@@ -14,9 +14,13 @@ namespace PhlegmaticOne.DataStorage.Storage.Queue {
         
         private readonly IDataStorageLogger _logger;
         private readonly OperationsQueueConfiguration _configuration;
-        private readonly CancellationTokenSource _cancellationTokenSource;
+        private readonly IDataStorageCancellationProvider _cancellationProvider;
         private readonly BlockingCollection<IQueueOperation> _queueOperations;
 
+        private Task _queueProcessingTask;
+        private int _isDraining;
+        private int _isRunning;
+        
         public int EnqueuedOperationsCount => _queueOperations.Count;
         public int OperationsCapacity => _queueOperations.BoundedCapacity;
 
@@ -24,15 +28,19 @@ namespace PhlegmaticOne.DataStorage.Storage.Queue {
         
         public OperationsQueue(IDataStorageLogger logger, 
             OperationsQueueConfiguration configuration,
-            CancellationTokenSource cancellationTokenSource) {
+            IDataStorageCancellationProvider cancellationProvider) {
             _logger = logger;
             _configuration = configuration;
-            _cancellationTokenSource = cancellationTokenSource;
+            _cancellationProvider = cancellationProvider;
             _queueOperations = CreateOperationsQueue();
         }
 
         public void EnqueueOperation(IQueueOperation queueOperation, CancellationToken cancellationToken = default) {
-            using var tokenSource = _cancellationTokenSource.LinkWith(cancellationToken);
+            if (IsDraining()) {
+                return;
+            }
+            
+            using var tokenSource = _cancellationProvider.LinkWith(cancellationToken);
 
             try {
                 _queueOperations.Add(queueOperation, tokenSource.Token);
@@ -48,10 +56,14 @@ namespace PhlegmaticOne.DataStorage.Storage.Queue {
             }
         }
 
-        public Task ExecuteOperationsAsync(CancellationToken cancellationToken = default) {
-            var tokenSource = _cancellationTokenSource.LinkWith(cancellationToken);
+        public void ExecuteOperationsAsync(CancellationToken cancellationToken = default) {
+            if (IsRunning()) {
+                return;
+            }
             
-            return Task.Run(async () => {
+            var tokenSource = _cancellationProvider.LinkWith(cancellationToken);
+            
+            Task.Run(async () => {
                 var token = tokenSource.Token;
                 
                 while (token.IsCancellationRequested == false) {
@@ -75,6 +87,11 @@ namespace PhlegmaticOne.DataStorage.Storage.Queue {
             }, tokenSource.Token);
         }
 
+        public Task WaitForQueueDrain() {
+            Interlocked.Exchange(ref _isDraining, 1);
+            return _queueProcessingTask;
+        }
+
         private void RaiseOperationChanged(IQueueOperation operation, QueueOperationStatus status, string errorMessage = "") {
             if (OperationChanged == null) {
                 return;
@@ -87,7 +104,7 @@ namespace PhlegmaticOne.DataStorage.Storage.Queue {
         }
 
         private QueueOperationStatus GetCancellationStatus() {
-            return _cancellationTokenSource.Token.IsCancellationRequested ?
+            return _cancellationProvider.InternalToken.IsCancellationRequested ?
                 QueueOperationStatus.CancelledInternal : 
                 QueueOperationStatus.CancelledExternal;
         }
@@ -96,6 +113,14 @@ namespace PhlegmaticOne.DataStorage.Storage.Queue {
             return _configuration.IsUnlimitedCapacity ?
                 new BlockingCollection<IQueueOperation>() : 
                 new BlockingCollection<IQueueOperation>(_configuration.MaxOperationsCapacity);
+        }
+
+        private bool IsDraining() {
+            return _isDraining == 1;
+        }
+
+        private bool IsRunning() {
+            return Interlocked.CompareExchange(ref _isRunning, 1, 0) == 1;
         }
     }
 }

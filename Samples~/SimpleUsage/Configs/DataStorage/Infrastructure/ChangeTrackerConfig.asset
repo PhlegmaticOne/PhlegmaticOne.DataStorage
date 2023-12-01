@@ -15,5 +15,3 @@ MonoBehaviour:
   _changeTrackerConfig:
     _timeInterval: 2
     _timeDelay: 2.5
-    _isAutoStart: 1
-    _isCancelOnDestroy: 1

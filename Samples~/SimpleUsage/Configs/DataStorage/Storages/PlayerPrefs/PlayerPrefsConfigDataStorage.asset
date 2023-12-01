@@ -14,4 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _serializerConfig: {fileID: 11400000, guid: addc57e973d9a3c4aa96228617627836, type: 2}
   _keyResolverConfig: {fileID: 11400000, guid: b01d080a55ab438a9b4b67655511bbbe, type: 2}
-  _cryptoConfig: {fileID: 11400000, guid: 0f5bdf68cdd471f4cb55fe959f50036a, type: 2}
+  _cryptoConfig: {fileID: 11400000, guid: df343deb46af47647884bce957bd2322, type: 2}

@@ -6,7 +6,7 @@ using PhlegmaticOne.DataStorage.Storage.ValueSources;
 
 namespace PhlegmaticOne.DataStorage.Storage.Extensions {
     public static class DataStorageExtensions {
-        public static async Task<IValueSource<T>> CreateAndInitializeValueSource<T>(
+        public static async Task<IValueSource<T>> GetInitializedValueSource<T>(
             this IDataStorage dataStorage, CancellationToken cancellationToken = default) where T : class, IModel {
             var valueSource = dataStorage.GetOrCreateValueSource<T>();
             await valueSource.InitializeAsync(cancellationToken);

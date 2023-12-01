@@ -6,9 +6,14 @@ using PhlegmaticOne.DataStorage.Storage.Base;
 namespace PhlegmaticOne.DataStorage.Storage.ValueSources {
     public class ValueSource<T> : IValueSource<T> where T: class, IModel {
         private readonly IDataStorage _dataStorage;
+        private readonly SemaphoreSlim _semaphore;
 
         private int _trackedChanges;
-        public ValueSource(IDataStorage dataStorage) => _dataStorage = dataStorage;
+        public ValueSource(IDataStorage dataStorage) {
+            _dataStorage = dataStorage;
+            _semaphore = new SemaphoreSlim(1, 1);
+        }
+
         public int TrackedChanges => _trackedChanges;
         public string DisplayName => typeof(T).Name;
 
@@ -27,7 +32,9 @@ namespace PhlegmaticOne.DataStorage.Storage.ValueSources {
         }
 
         public async Task InitializeAsync(CancellationToken cancellationToken = default) {
-            Value = await _dataStorage.ReadAsync<T>(cancellationToken);
+            await _semaphore.WaitAsync(cancellationToken);
+            Value ??= await _dataStorage.ReadAsync<T>(cancellationToken);
+            _semaphore.Release();
         }
 
         public void EnqueueForSaving(CancellationToken cancellationToken = default) {

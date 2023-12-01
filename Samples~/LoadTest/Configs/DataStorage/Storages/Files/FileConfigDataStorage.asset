@@ -14,4 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _savesDirectoryPath: PlayerSaves
   _keyResolverConfig: {fileID: 11400000, guid: 2986e0caa21bd5b4dbf95fb417331cdc, type: 2}
-  _serializerConfig: {fileID: 11400000, guid: 675542647d1bca244842938d24b81b84, type: 2}
+  _serializerConfig: {fileID: 11400000, guid: 308690357fdabc64b958589100e8e9eb, type: 2}

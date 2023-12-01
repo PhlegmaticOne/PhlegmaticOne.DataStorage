@@ -34,7 +34,7 @@ namespace SimpleUsage {
         private void OnApplicationQuit() {
             _changePlayerCoinsController.OnReset();
             _queueTextLoggingController.OnReset();
-            _creationResult.TokenSource.Cancel();
+            _creationResult.CancellationProvider.Cancel();
         }
     }
 }

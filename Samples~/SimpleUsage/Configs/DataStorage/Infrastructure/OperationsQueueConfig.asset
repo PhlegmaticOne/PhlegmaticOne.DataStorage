@@ -14,4 +14,3 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _configuration:
     _maxOperationsCapacity: -1
-    _maxNonBlockingAddTimeoutMilliseconds: 0

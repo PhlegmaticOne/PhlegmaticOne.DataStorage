@@ -1,6 +1,6 @@
-﻿using System.Threading;
-using PhlegmaticOne.DataStorage.DataSources;
+﻿using PhlegmaticOne.DataStorage.DataSources;
 using PhlegmaticOne.DataStorage.DataSources.Base;
+using PhlegmaticOne.DataStorage.Infrastructure.Cancellation;
 using PhlegmaticOne.DataStorage.Infrastructure.Dispatcher;
 using PhlegmaticOne.DataStorage.Provider.Base;
 using PhlegmaticOne.DataStorage.Storage.ChangeTracker;
@@ -26,22 +26,23 @@ namespace PhlegmaticOne.DataStorage.Provider {
             var changeTrackerConfig = providerConfig.ChangeTrackerConfig.GetChangeTrackerConfig();
             var threadDispatcher = CreateMainThreadDispatcher();
 
-            var tokenSource = new CancellationTokenSource();
-            var operationsQueue = new OperationsQueue(logger, operationsQueueConfig, tokenSource);
-            var context = new DataSourceFactoryContext(threadDispatcher, logger, operationsQueue, dataStorageConfig);
-            var dataStorage = CreateDataStorage(context, tokenSource);
-            var changeTracker = new ChangeTrackerTimeInterval(dataStorage, changeTrackerConfig, logger, tokenSource);
+            var cancellationProvider = new DataStorageCancellationProvider();
+            var operationsQueue = new OperationsQueue(logger, operationsQueueConfig, cancellationProvider);
+            var context = new DataSourceFactoryContext(threadDispatcher, logger, operationsQueue, dataStorageConfig, cancellationProvider);
+            var dataStorage = CreateDataStorage(context);
+            var changeTracker = new ChangeTrackerTimeInterval(dataStorage, changeTrackerConfig, logger, cancellationProvider);
 
-            return new DataStorageCreationResult(dataStorage, changeTracker, tokenSource);
+            return new DataStorageCreationResult(dataStorage, changeTracker, cancellationProvider);
         }
         
-        private static Storage.DataStorage CreateDataStorage(DataSourceFactoryContext factoryContext, CancellationTokenSource cts) {
+        private static Storage.DataStorage CreateDataStorage(DataSourceFactoryContext factoryContext) {
             var dataSourceFactory = factoryContext.DataSourceFactory;
             var logger = factoryContext.Logger;
             var operationsQueue = factoryContext.OperationsQueue;
+            var cancellationProvider = factoryContext.CancellationProvider;
             var dataSourcesSet = new DataSourcesSet(dataSourceFactory, factoryContext);
-            var storage = new Storage.DataStorage(logger, dataSourcesSet, operationsQueue, cts);
-            _ = operationsQueue.ExecuteOperationsAsync();
+            var storage = new Storage.DataStorage(logger, dataSourcesSet, operationsQueue, cancellationProvider);
+            operationsQueue.ExecuteOperationsAsync();
             return storage;
         }
         

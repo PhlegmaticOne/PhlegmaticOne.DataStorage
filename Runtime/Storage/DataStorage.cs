@@ -15,28 +15,28 @@ using PhlegmaticOne.DataStorage.Storage.ValueSources;
 namespace PhlegmaticOne.DataStorage.Storage {
     public class DataStorage : IDataStorage {
         private static readonly object Sync = new object();
-        
+
         private readonly IDataStorageLogger _logger;
         private readonly DataSourcesSet _dataSourcesSet;
         private readonly IOperationsQueue _operationsQueue;
         private readonly ValueSourceCollection _valueSourceCollection;
-        private readonly CancellationTokenSource _cancellationTokenSource;
-        
+        private readonly IDataStorageCancellationProvider _cancellationProvider;
+
         public DataStorage(
             IDataStorageLogger logger,
             DataSourcesSet dataSourcesSet,
             IOperationsQueue operationsQueue,
-            CancellationTokenSource cts) {
+            IDataStorageCancellationProvider cancellationProvider) {
             _valueSourceCollection = new ValueSourceCollection();
+            _cancellationProvider = ExceptionHelper.EnsureNotNull(cancellationProvider, nameof(cancellationProvider));
             _logger = ExceptionHelper.EnsureNotNull(logger, nameof(logger));
-            _cancellationTokenSource = ExceptionHelper.EnsureNotNull(cts, nameof(cts));
             _dataSourcesSet = ExceptionHelper.EnsureNotNull(dataSourcesSet, nameof(dataSourcesSet));
             _operationsQueue = ExceptionHelper.EnsureNotNull(operationsQueue, nameof(operationsQueue));
         }
 
         public Task<T> ReadAsync<T>(CancellationToken ct = default) where T: class, IModel {
             try {
-                using var tokenSource = _cancellationTokenSource.LinkWith(ct);
+                using var tokenSource = _cancellationProvider.LinkWith(ct);
                 var source = _dataSourcesSet.Source<T>();
                 return source.ReadAsync(tokenSource.Token);
             }
@@ -48,7 +48,7 @@ namespace PhlegmaticOne.DataStorage.Storage {
 
         public Task SaveAsync<T>(T value, CancellationToken ct = default) where T : class, IModel {
             try {
-                using var tokenSource = _cancellationTokenSource.LinkWith(ct);
+                using var tokenSource = _cancellationProvider.LinkWith(ct);
                 var source = _dataSourcesSet.Source<T>();
                 return source.WriteAsync(value, tokenSource.Token);
             }
@@ -60,7 +60,7 @@ namespace PhlegmaticOne.DataStorage.Storage {
 
         public Task DeleteAsync<T>(CancellationToken ct = default) where T: class, IModel {
             try {
-                using var tokenSource = _cancellationTokenSource.LinkWith(ct);
+                using var tokenSource = _cancellationProvider.LinkWith(ct);
                 var source = _dataSourcesSet.Source<T>();
                 return source.DeleteAsync(tokenSource.Token);
             }
@@ -81,7 +81,7 @@ namespace PhlegmaticOne.DataStorage.Storage {
         }
 
         public IOperationsQueueObserver GetQueueObserver() => _operationsQueue;
-
+        
         public void EnqueueForSaving<T>(IValueSource<T> value, CancellationToken ct = default) where T : class, IModel {
             var operation = new QueueOperationSaveState<T>(value, _logger, this);
             _operationsQueue.EnqueueOperation(operation, ct);
