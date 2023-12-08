@@ -4,37 +4,45 @@ using UnityEngine;
 
 namespace PhlegmaticOne.DataStorage.Storage.ChangeTracker {
     public class DataStorageLoggerDebug : IDataStorageLogger {
-        private readonly bool _verbose;
+        private readonly DataStorageLoggerLogLevel _logLevel;
         private readonly bool _isDebug;
 
-        public DataStorageLoggerDebug(bool verbose) {
-            _verbose = verbose;
+        public DataStorageLoggerDebug(DataStorageLoggerLogLevel logLevel) {
+            _logLevel = logLevel;
             _isDebug = Application.isEditor || Debug.isDebugBuild;
         }
         
         public void LogException(Exception exception) {
             Debug.LogException(exception);
-            LogMessagePrivate($"<color=#cc3300>[DataStorage]: </color>Error: {exception.Message}");
+            LogMessageIfLogLevelMatches(
+                $"<color=#cc3300>[DataStorage]: </color>Error: {exception.Message}",
+                DataStorageLoggerLogLevel.Errors);
         }
 
         public void LogCancellation(string cancellationSource) {
-            LogMessagePrivate($"<color=#ffcc00>[DataStorage]: </color>{cancellationSource} - cancelled");
+            LogMessageIfLogLevelMatches(
+                $"<color=#ffcc00>[DataStorage]: </color>{cancellationSource} - cancelled",
+                DataStorageLoggerLogLevel.Warnings);
         }
 
         public void LogTrackedChanges(IValueSource valueSource) {
-            LogMessagePrivate($"<color=#99cc33>[DataStorage]: </color>Tracked {valueSource.TrackedChanges} changes in {valueSource.DisplayName}");
+            LogMessageIfLogLevelMatches(
+                $"<color=#99cc33>[DataStorage]: </color>Tracked {valueSource.TrackedChanges} changes in {valueSource.DisplayName}",
+                DataStorageLoggerLogLevel.Info);
         }
 
         public void LogSaving(IValueSource valueSource) {
-            LogMessagePrivate($"<color=#339900>[DataStorage]: </color>Saving changes in {valueSource.DisplayName}");
+            LogMessageIfLogLevelMatches(
+                $"<color=#339900>[DataStorage]: </color>Saving changes in {valueSource.DisplayName}",
+                DataStorageLoggerLogLevel.Info);
         }
 
-        private void LogMessagePrivate(string message) {
-            if (ShouldLog()) {
+        private void LogMessageIfLogLevelMatches(string message, DataStorageLoggerLogLevel logLevel) {
+            if (ShouldLog() && _logLevel.HasFlag(logLevel)) {
                 Debug.Log(message);
             }
         }
 
-        private bool ShouldLog() => _verbose && _isDebug;
+        private bool ShouldLog() => _logLevel != DataStorageLoggerLogLevel.None && _isDebug;
     }
 }
