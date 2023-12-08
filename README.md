@@ -79,7 +79,7 @@ public class CoinsService : ICoinsService {
 
     public int Coins => _coinsState.Value.Coins;
     public void ChangeCoins(int delta) => _coinsState.TrackableValue.Coins += delta;
-    }
+}
 ```
 
 ## Change Tracker Config
@@ -98,8 +98,8 @@ Available at Create -> Data Storage -> Infrastructure -> Type Name Key Resolver 
 
 ## Logger Configuration
 
-Defines single configuration which is logger verbosity. 
-Is this option is ```true``` then Logger will log information in Debug Log, otherwise - is won't.
+Defines single configuration which is logger Log level. 
+This field is an enum with flags attribute and therefore its values can be conbined in different ways.
 
 Available at Create -> Data Storage -> Infrastructure -> Logger Config
 
@@ -108,7 +108,7 @@ Available at Create -> Data Storage -> Infrastructure -> Logger Config
 Defines single configuration which is queue operations capacity.
 Is this option is ```-1``` then Logger queue can have unlimited operation, if this option is positive number then it is operations queue capacity.
 
-Available at Create -> Data Storage -> Infrastructure -> Logger Config
+Available at Create -> Data Storage -> Infrastructure -> Operations Queue Config
 
 ## Storage configs
 
