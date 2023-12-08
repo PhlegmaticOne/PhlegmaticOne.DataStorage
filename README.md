@@ -2,73 +2,47 @@
 
 ### Data storage for Unity with PlayerPrefs and Files support
 
-##
+## ```IDataStorage```
 
-## Zenject Installer
+Interface defines methods for reading and writing data. Default implementation can read and save data in PlayerPrefs and Files.
 
-```cs
-public class DataStorageInstaller : MonoInstaller {
-    [SerializeField] private DataStorageMonoProvider _dataStorageProvider;
+## ```ChangeTracker```
 
-    public override void InstallBindings() {
-        _dataStorageProvider.Initialize();
-        _dataStorageProvider.StartChangeTracker();
-        BindDataStorage();
-    }
+Package provides ChangeTracker, which saves all changes made by user, if it was started.
 
-    private void BindDataStorage() {
-        Container.BindInterfacesAndSelfTo<DataStorage>()
-            .FromInstance(_dataStorageProvider.DataStorage)
-            .AsSingle();
-    }
-}
-```
+## ```IValueSource<T>```
 
-### ```AsTrackable``` and ```AsNoTrackable```
+Objects that implement this interface work directly with ```IDataStorage``` and have similar methods for reading and saving data.
+It seems to be more convenient to work with ```IValueSource<T>``` instead of ```IDataStorage```.
 
-- ```AsTrackable``` - should be called for editable operations - ```ChangeTracker``` will save model if ```TrackedChanges > 0``` and ```AsTrackable``` increases that value
-- ```AsNoTrackable``` - should be called for readonly operations - ```TrackedChanges``` will not be increased
+### ```Value``` and ```TrackableValue```
+
+- ```TrackableValue``` - should be called for editable operations - ```ChangeTracker``` will save model if ```TrackedChanges > 0``` and ```AsTrackable``` increases that value
+- ```Value``` - should be called for readonly operations - ```TrackedChanges``` will not be increased
+
+If ```ChangeTracker``` is not working calling ```Value``` or ```TrackableValue``` is the same.
 
 # Usage
 
 ## Model
 
 ```cs
-public enum CurrencyType {
-    Coins = 0,
-    Gems = 1
-}
-
 [Serializable]
 [DataContract]
-public class PlayerState : IModel {
-    [JsonProperty] [DataMember] private string _name;
+public class CoinsState : IModel {
     [JsonProperty] [DataMember] private int _coins;
-    [JsonProperty] [DataMember] private int _gems;
 
     [JsonConstructor]
-    public PlayerState(string name, int coins, int gems) {
-        _name = name;
+    public CoinsState(int coins) {
         _coins = coins;
-        _gems = gems;
     }
 
-    public static PlayerState Initial => new PlayerState(string.Empty, 0, 0);
+    public static CoinsState Initial => new CoinsState(0);
 
-    [JsonIgnore] [IgnoreDataMember] public int Coins => _coins;
-
-    [JsonIgnore] [IgnoreDataMember] public int Gems => _gems;
-
-    public void ChangeName(string name) => _name = name;
-
-    public void ChangeCoins(int delta) {
-        _coins += delta;
-        _coins = Mathf.Clamp(_coins, 0, int.MaxValue);
-    }
-
-    public void ChangeGems(int delta) {
-        _gems += delta;
-        _gems = Mathf.Clamp(_gems, 0, int.MaxValue);
+    [JsonIgnore]
+    public int Coins {
+        get => _coins;
+        set => _coins = value;
     }
 }
 ```
@@ -78,178 +52,157 @@ public class PlayerState : IModel {
 ### Interface
 
 ```cs
-public interface IPlayerCurrencyService {
+public interface ICoinsService {
     Task InitializeAsync();
-
-    void ChangeCurrency(int delta, CurrencyType currencyType);
-
-    int GetCurrency(CurrencyType currencyType);
+    int Coins { get; }
+    void ChangeCoins(int delta);
 }
 ```
 
-### Implementation with ```IDataStorage```
+### Implementation
 
 ```cs
-public class PlayerCurrencyService : IPlayerCurrencyService {
-    private readonly IDataStorage _dataStorage;
-    private IValueSource<PlayerState> _playerState;
+public class CoinsService : ICoinsService {
+    private readonly IValueSource<CoinsState> _coinsState;
 
-    public PlayerCurrencyService(IDataStorage dataStorage) {
-        _dataStorage = dataStorage;
+    public CoinsService(IValueSource<CoinsState> coinsState) {
+        _coinsState = coinsState;
     }
     
     public async Task InitializeAsync() {
-        _playerState = await _dataStorage.ReadAsync<PlayerState>();
+        await _coinsState.InitializeAsync();
         
-        if (_playerState.NoValue()) {
-            _playerState.SetRaw(PlayerState.Initial);  
+        if (_coinsState.HasNoValue()) {
+            _coinsState.SetRawValue(CoinsState.Initial);  
         }
     }
 
-    public int GetCurrency(CurrencyType currencyType) {
-        return currencyType switch {
-            CurrencyType.Coins => _playerState.AsNoTrackable().Coins,
-            CurrencyType.Gems => _playerState.AsNoTrackable().Gems,
-            _ => throw new ArgumentOutOfRangeException(nameof(currencyType), currencyType, null)
-        };
+    public int Coins => _coinsState.Value.Coins;
+    public void ChangeCoins(int delta) => _coinsState.TrackableValue.Coins += delta;
     }
-
-    public void ChangeCurrency(int delta, CurrencyType currencyType) {
-        switch (currencyType) {
-            case CurrencyType.Coins:
-                _playerState.AsTrackable().ChangeCoins(delta);
-                break;
-            case CurrencyType.Gems:
-                _playerState.AsTrackable().ChangeGems(delta);
-                break;
-        }
-    }
-}
-```
-
-### Implementation with ```IValueSource```
-
-```cs
-public class PlayerCurrencyService : IPlayerCurrencyService {
-    private readonly IValueSource<PlayerState> _playerState;
-
-    public PlayerCurrencyService(IValueSource<PlayerState> playerState) {
-        _playerState = playerState;
-    }
-    
-    public async Task InitializeAsync() {
-        await _playerState.InitializeAsync();
-        
-        if (_playerState.NoValue()) {
-            _playerState.SetRaw(PlayerState.Initial);  
-        }
-    }
-
-    public int GetCurrency(CurrencyType currencyType) {
-        return currencyType switch {
-            CurrencyType.Coins => _playerState.AsNoTrackable().Coins,
-            CurrencyType.Gems => _playerState.AsNoTrackable().Gems,
-            _ => throw new ArgumentOutOfRangeException(nameof(currencyType), currencyType, null)
-        };
-    }
-
-    public void ChangeCurrency(int delta, CurrencyType currencyType) {
-        switch (currencyType) {
-            case CurrencyType.Coins:
-                _playerState.AsTrackable().ChangeCoins(delta);
-                break;
-            case CurrencyType.Gems:
-                _playerState.AsTrackable().ChangeGems(delta);
-                break;
-        }
-    }
-}
 ```
 
 ## Change Tracker Config
 
-![image](https://github.com/PhlegmaticOne/PhlegmaticOne.DataStorage/assets/73738250/c3635274-af43-4582-bc5b-e6c5e7f4f414)
-
 - ```TimeInterval``` - saves all tracked changes every ```TimeInterval``` seconds
 - ```TimeDelay``` - initial delay before change tracking starts
-- ```IsChangeTrackerVerbose``` - if ```true``` enables logging for information such as: amount of tracked changes, warnings and errors
 
-Available at Create -> Data Storage -> Change Tracker Config
+Available at Create -> Data Storage -> Infrastructure -> Change Tracker Config
 
 ## Key Resolver Configuration
 
 Creates an object that defines the key by which the data will be saved: for files this is the file name, for PlayerPrefs this is the key for PlayerPrefs. 
-The standard implementation returns the class name as the key - ```typeof(T).Name```
+The standard implementation returns the class name as the key - ```typeof(T).Name``` formatted with specified format
 
-Available at Create -> Data Storage -> Type Name Key Resolver Configuration
+Available at Create -> Data Storage -> Infrastructure -> Type Name Key Resolver Configuration
+
+## Logger Configuration
+
+Defines single configuration which is logger verbosity. 
+Is this option is ```true``` then Logger will log information in Debug Log, otherwise - is won't.
+
+Available at Create -> Data Storage -> Infrastructure -> Logger Config
+
+## Operation Queue Configuration
+
+Defines single configuration which is queue operations capacity.
+Is this option is ```-1``` then Logger queue can have unlimited operation, if this option is positive number then it is operations queue capacity.
+
+Available at Create -> Data Storage -> Infrastructure -> Logger Config
 
 ## Storage configs
 
-![image](https://github.com/PhlegmaticOne/PhlegmaticOne.DataStorage/assets/73738250/1fae1f2b-8c7c-45e0-9d83-9b33685dce3c)
-
 Package includes following storages and their configs:
 - ```InMemory``` - all data is stored in memory only in the current session and is cleared when exiting the game
-- ```PlayerPrefs``` - data is stroring in PlayerPrefs in one of 2 possible formats: JSON or XML
-- ```Files``` - data is stroring in files in one of 3 possible formats: JSON, XML or Binary.
+- ```PlayerPrefs``` - data is stroring in PlayerPrefs in one of 2 possible formats: JSON or XML. Also data encryption/decryption is available.
+- ```Files``` - data is stroring in files in one of 3 possible formats: JSON, XML or Binary. Also data encryption/decryption is available.
 
 Available at Create -> Data Storage -> Storages -> {StorageType}
 
 ## Data Storage Provider config
 
-![image](https://github.com/PhlegmaticOne/PhlegmaticOne.DataStorage/assets/73738250/73fcbe68-3916-4643-bff6-34fc40ad2d67)
+![image](https://github.com/PhlegmaticOne/PhlegmaticOne.DataStorage/assets/73738250/e709c8e7-fd8c-4470-b726-7b840846cb1b)
 
-Includes Change Tracker config and Storage configs. Storage configs can have multiple configs, but for DataStorage instantiation the **_first_ config will be used**
+Includes infrastructure configs such as Logger Config, Operations Queue Config, Change Tracker Config and one of configured Storage configs.
+
+Config has Editor button, which creates all infrastructure configs and all storage configs in directory (with default values), where this config is located.
 
 # Setup from Editor
 
 ## Test scene
 
-![image](https://github.com/PhlegmaticOne/PhlegmaticOne.DataStorage/assets/73738250/2af5b842-03df-4da9-ab1b-cddfcd2afe4c)
+![image](https://github.com/PhlegmaticOne/PhlegmaticOne.DataStorage/assets/73738250/a50630be-a9a9-4919-958e-e1e70911b813)
 
-## Test scripts on GameObject
+## Test scripts setup on Scene
 
-![image](https://github.com/PhlegmaticOne/PhlegmaticOne.DataStorage/assets/73738250/9336883a-6b86-42c6-82c8-67e477d54e2d)
+![image](https://github.com/PhlegmaticOne/PhlegmaticOne.DataStorage/assets/73738250/0d306d7b-d481-45d1-bb62-9304f393f058)
 
 ## Test script
 ```cs
 public class SampleDataStorageUsage : MonoBehaviour {
-    [SerializeField] private DataStorageMonoProvider _dataStorageProvider;
-    [SerializeField] private Button _addCoinsButton;
-    [SerializeField] private Button _subtractCoinsButton;
-    [SerializeField] private Text _infoText;
-    [SerializeField] private int _testCoins;
+    [SerializeField] private DataStorageProviderConfig _dataStorageProviderConfig;
+    [SerializeField] private ChangePlayerCoinsController _changePlayerCoinsController;
+    [SerializeField] private QueueTextLoggingController _queueTextLoggingController;
+    [SerializeField] private MainThreadDispatcherTest _mainThreadDispatcher;
 
-    private IPlayerCurrencyService _playerCurrencyService;
+    private DataStorageCreationResult _creationResult;
 
     private void Awake() {
-        _dataStorageProvider.Initialize();
-        _addCoinsButton.onClick.AddListener(AddCoins);
-        _subtractCoinsButton.onClick.AddListener(SubtractCoins);
-
-        var playerState = _dataStorageProvider.NewValueSource<PlayerState>();
-        _playerCurrencyService = new PlayerCurrencyService(playerState);
+        _creationResult = _dataStorageProviderConfig.CreateDataStorageFromThisConfig();
+        var dataStorage = _creationResult.DataStorage;
+        var valueSource = dataStorage.GetOrCreateValueSource<CoinsState>();
+        var coinsService = new CoinsService(valueSource);
+        var queueObserver = dataStorage.GetQueueObserver();
+    
+        _changePlayerCoinsController.Construct(coinsService);
+        _queueTextLoggingController.Construct(queueObserver, _mainThreadDispatcher);
     }
 
     private async void Start() {
-        _dataStorageProvider.StartChangeTracker();
-        await _playerCurrencyService.InitializeAsync();
-        UpdateInfoText();
+        _ = _creationResult.ChangeTracker.TrackAsync();
+        await _changePlayerCoinsController.InitializeAsync();
     }
+
+    private void OnApplicationQuit() {
+        _changePlayerCoinsController.OnReset();
+        _queueTextLoggingController.OnReset();
+        _creationResult.CancellationProvider.Cancel();
+    }
+}
+```
+
+## Zenject Installer
+
+```cs
+public static class DataStorageZenjectExtensions
+{
+    public static void BindValueSource<T>(this DiContainer diContainer) where T : class, IModel
+    {
+        diContainer.Bind<IValueSource<T>>().FromFactory<ValueSourceFactory<T>>().AsSingle();
+    }
+}
+
+public class ValueSourceFactory<T> : IFactory<IValueSource<T>> where T : class, IModel
+{
+    private readonly IDataStorage _dataStorage;
+    public ValueSourceFactory(IDataStorage dataStorage) => _dataStorage = dataStorage;
+    public IValueSource<T> Create() => _dataStorage.GetOrCreateValueSource<T>();
+}
+
+public class DataStorageInstaller : MonoInstaller {
+    [SerializeField] private DataStorageProviderConfig _dataStorageProvider;
     
-    private void SubtractCoins() {
-        _playerCurrencyService.ChangeCurrency(-_testCoins, CurrencyType.Coins);
-        UpdateInfoText();
+    public override void InstallBindings() {
+        BindDataStorage();
     }
 
-    private void AddCoins() {
-        _playerCurrencyService.ChangeCurrency(_testCoins, CurrencyType.Coins);
-        UpdateInfoText();
-    }
-
-    private void UpdateInfoText() {
-        var coins = _playerCurrencyService.GetCurrency(CurrencyType.Coins);
-        var text = $"Player has {coins} coins now!";
-        _infoText.text = text;
+    private void BindDataStorage()
+    {
+        var creationResult = _dataStorageProvider.CreateDataStorageFromThisConfig();
+        
+        Container.Bind<IDataStorage>().FromInstance(creationResult.DataStorage).AsSingle();
+        
+        //Container.BindValueSource<AnyModel>();
     }
 }
 ```
