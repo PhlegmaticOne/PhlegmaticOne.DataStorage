@@ -1,44 +1,59 @@
 ﻿using System;
+using System.Diagnostics.Tracing;
 using PhlegmaticOne.DataStorage.Storage.ValueSources;
 using UnityEngine;
 
-namespace PhlegmaticOne.DataStorage.Storage.ChangeTracker {
-    public class DataStorageLoggerDebug : IDataStorageLogger {
+namespace PhlegmaticOne.DataStorage.Storage.ChangeTracker
+{
+    public class DataStorageLoggerDebug : IDataStorageLogger
+    {
         private readonly DataStorageLoggerLogLevel _logLevel;
         private readonly bool _isDebug;
 
-        public DataStorageLoggerDebug(DataStorageLoggerLogLevel logLevel) {
+        public DataStorageLoggerDebug(DataStorageLoggerLogLevel logLevel)
+        {
             _logLevel = logLevel;
             _isDebug = Application.isEditor || Debug.isDebugBuild;
         }
-        
-        public void LogException(Exception exception) {
+
+        public void LogException(Exception exception)
+        {
             Debug.LogException(exception);
-            LogMessageIfLogLevelMatches(
-                $"<color=#cc3300>[DataStorage]: </color>Error: {exception.Message}",
-                DataStorageLoggerLogLevel.Errors);
+
+            if (_logLevel.HasFlag(EventLevel.Error))
+            {
+                LogMessage($"<color=#cc3300>[DataStorage]: </color>Error: {exception.Message}");
+            }
         }
 
-        public void LogCancellation(string cancellationSource) {
-            LogMessageIfLogLevelMatches(
-                $"<color=#ffcc00>[DataStorage]: </color>{cancellationSource} - cancelled",
-                DataStorageLoggerLogLevel.Warnings);
+        public void LogCancellation(string cancellationSource)
+        {
+            if (_logLevel.HasFlag(EventLevel.Warning))
+            {
+                LogMessage($"<color=#ffcc00>[DataStorage]: </color>{cancellationSource} - cancelled");
+            }
         }
 
-        public void LogTrackedChanges(IValueSource valueSource) {
-            LogMessageIfLogLevelMatches(
-                $"<color=#99cc33>[DataStorage]: </color>Tracked {valueSource.TrackedChanges} changes in {valueSource.DisplayName}",
-                DataStorageLoggerLogLevel.Info);
+        public void LogTrackedChanges(IValueSource valueSource)
+        {
+            if (_logLevel.HasFlag(DataStorageLoggerLogLevel.Info))
+            {
+                LogMessage($"<color=#99cc33>[DataStorage]: </color>Tracked {valueSource.TrackedChanges} changes in {valueSource.DisplayName}");
+            }
         }
 
-        public void LogSaving(IValueSource valueSource) {
-            LogMessageIfLogLevelMatches(
-                $"<color=#339900>[DataStorage]: </color>Saving changes in {valueSource.DisplayName}",
-                DataStorageLoggerLogLevel.Info);
+        public void LogSaving(IValueSource valueSource)
+        {
+            if (_logLevel.HasFlag(DataStorageLoggerLogLevel.Info))
+            {
+                LogMessage($"<color=#339900>[DataStorage]: </color>Saving changes in {valueSource.DisplayName}");
+            }
         }
 
-        private void LogMessageIfLogLevelMatches(string message, DataStorageLoggerLogLevel logLevel) {
-            if (ShouldLog() && _logLevel.HasFlag(logLevel)) {
+        private void LogMessage(string message)
+        {
+            if (ShouldLog())
+            {
                 Debug.Log(message);
             }
         }
