@@ -3,16 +3,20 @@ using System.Threading.Tasks;
 using PhlegmaticOne.DataStorage.Contracts;
 using PhlegmaticOne.DataStorage.DataSources.Base;
 
-namespace PhlegmaticOne.DataStorage.DataSources.InMemorySource {
-    public class InMemoryDataSource<T> : IDataSource<T> where T: class, IModel {
+namespace PhlegmaticOne.DataStorage.DataSources.InMemorySource
+{
+    public class InMemoryDataSource<T> : IDataSource<T> where T : class, IModel
+    {
         private T _inMemoryValue;
 
-        public Task WriteAsync(T value, CancellationToken cancellationToken = default) {
+        public Task WriteAsync(T value, CancellationToken cancellationToken = default)
+        {
             _inMemoryValue = value;
             return Task.CompletedTask;
         }
 
-        public Task DeleteAsync(CancellationToken cancellationToken = default) {
+        public Task DeleteAsync(CancellationToken cancellationToken = default)
+        {
             _inMemoryValue = default;
             return Task.CompletedTask;
         }

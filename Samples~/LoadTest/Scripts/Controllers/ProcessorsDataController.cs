@@ -4,40 +4,31 @@ using LoadTest.Processors;
 using PhlegmaticOne.DataStorage.Storage.Base;
 using PhlegmaticOne.DataStorage.Storage.ChangeTracker.Base;
 using UnityEngine;
-using Random = UnityEngine.Random;
 
-namespace LoadTest.Controllers {
-    public enum TrackActionType {
+namespace LoadTest.Controllers
+{
+    public enum TrackActionType
+    {
         TrackEveryAction,
         TrackByChangeTracker
     }
-    
-    public class ProcessorsDataController : MonoBehaviour {
+
+    public class ProcessorsDataController : MonoBehaviour
+    {
         [SerializeField] private List<ProcessorDataBase> _processorsData;
         [SerializeField] private float _minActionTime;
         [SerializeField] private float _maxActionTime;
         [SerializeField] private TrackActionType _trackActionType;
-        
-        private IDataStorage _dataStorage;
         private IChangeTracker _changeTracker;
-        
+
+        private IDataStorage _dataStorage;
+
         private bool _isStarted;
 
-        public void Construct(IDataStorage dataStorage, IChangeTracker changeTracker) {
-            _changeTracker = changeTracker;
-            _dataStorage = dataStorage;
-        }
-
-        public async Task InitializeAsync() {
-            foreach (var processorDataBase in _processorsData) {
-                await processorDataBase.OnInitialize(_dataStorage);
-            }
-
-            _isStarted = true;
-        }
-
-        private void Update() {
-            if (!_isStarted) {
+        private void Update()
+        {
+            if (!_isStarted)
+            {
                 return;
             }
 
@@ -45,20 +36,37 @@ namespace LoadTest.Controllers {
             UpdateDataProcessors();
         }
 
-        private void UpdateDataProcessors() {
+        public void Construct(IDataStorage dataStorage, IChangeTracker changeTracker)
+        {
+            _changeTracker = changeTracker;
+            _dataStorage = dataStorage;
+        }
+
+        public async Task InitializeAsync()
+        {
+            foreach (var processorDataBase in _processorsData) await processorDataBase.OnInitialize(_dataStorage);
+
+            _isStarted = true;
+        }
+
+        private void UpdateDataProcessors()
+        {
             var deltaTime = Time.deltaTime;
-            
-            foreach (var processorDataBase in _processorsData) {
+
+            foreach (var processorDataBase in _processorsData)
+            {
                 processorDataBase.TimeToNextAction -= deltaTime;
 
-                if (processorDataBase.TimeToNextAction > 0) {
+                if (processorDataBase.TimeToNextAction > 0)
+                {
                     continue;
                 }
-                
+
                 var time = Random.Range(_minActionTime, _maxActionTime);
                 processorDataBase.TimeToNextAction = time;
 
-                switch (_trackActionType) {
+                switch (_trackActionType)
+                {
                     case TrackActionType.TrackEveryAction:
                         processorDataBase.OnActionTrackInstant(_dataStorage);
                         break;
@@ -69,11 +77,14 @@ namespace LoadTest.Controllers {
             }
         }
 
-        private void WorkChangeTracker() {
-            if (_trackActionType == TrackActionType.TrackByChangeTracker) {
+        private void WorkChangeTracker()
+        {
+            if (_trackActionType == TrackActionType.TrackByChangeTracker)
+            {
                 _changeTracker.ContinueTracking();
             }
-            else {
+            else
+            {
                 _changeTracker.StopTracking();
             }
         }

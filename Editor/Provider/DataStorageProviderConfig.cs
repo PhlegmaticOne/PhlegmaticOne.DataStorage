@@ -16,11 +16,13 @@ using PhlegmaticOne.DataStorage.Provider.Base;
 using PhlegmaticOne.DataStorage.Provider.Configs;
 using UnityEngine;
 
-namespace PhlegmaticOne.DataStorage.Configuration.Provider {
+namespace PhlegmaticOne.DataStorage.Configuration.Provider
+{
     [CreateAssetMenu(
         menuName = "Data Storage/Data Storage Provider Config",
         fileName = "DataStorageProviderConfig")]
-    public class DataStorageProviderConfig : ScriptableObject, IDataStorageProviderConfig {
+    public class DataStorageProviderConfig : ScriptableObject, IDataStorageProviderConfig
+    {
         [SerializeField] private DataStorageLoggerConfig _loggerConfig;
         [SerializeField] private ChangeTrackerConfig _changeTrackerConfig;
         [SerializeField] private DataStorageConfig _dataStorageConfig;
@@ -31,14 +33,14 @@ namespace PhlegmaticOne.DataStorage.Configuration.Provider {
         public IDataStorageConfig DataStorageConfig => _dataStorageConfig;
         public IOperationsQueueConfig OperationsQueueConfig => _operationsQueueConfig;
 
-        public DataStorageCreationResult CreateDataStorageFromThisConfig() {
-            return DataStorageProvider.CreateDataStorage(this);
-        }
-        
-        internal void CreateAndSetupDefaultConfigs() {
+        public DataStorageCreationResult CreateDataStorageFromThisConfig() =>
+            DataStorageProvider.CreateDataStorage(this);
+
+        internal void CreateAndSetupDefaultConfigs()
+        {
             var rootDirectory = AssetUtils.GetAssetDirectory(this);
             ResetState(rootDirectory);
-            
+
             var infrastructureDirectory = AssetUtils.CreateDirectory(rootDirectory, DirectoryNames.Infrastructure);
             var changeTrackerConfig = AssetUtils.Create<ChangeTrackerConfig>(infrastructureDirectory);
             var loggerConfig = AssetUtils.Create<DataStorageLoggerConfig>(infrastructureDirectory);
@@ -46,35 +48,40 @@ namespace PhlegmaticOne.DataStorage.Configuration.Provider {
             var operationsQueueConfig = AssetUtils.Create<DataStorageOperationsQueueConfig>(infrastructureDirectory);
             var storagesDirectory = AssetUtils.CreateDirectory(rootDirectory, DirectoryNames.Storages);
 
-            var storageConfigs = new List<DataStorageConfig> {
+            var storageConfigs = new List<DataStorageConfig>
+            {
                 CreateInMemoryConfig(storagesDirectory),
                 CreatePlayerPrefsConfig(storagesDirectory, keyResolverConfig),
                 CreateFileConfig(storagesDirectory, keyResolverConfig)
             };
-            
+
             var defaultStorageConfig = AssetUtils.FindDefaultImplementation(storageConfigs);
-            
+
             _loggerConfig = loggerConfig;
             _changeTrackerConfig = changeTrackerConfig;
             _dataStorageConfig = defaultStorageConfig;
             _operationsQueueConfig = operationsQueueConfig;
-            
+
             AssetUtils.CommitChanges();
         }
 
-        private void ResetState(string rootDirectory) {
+        private void ResetState(string rootDirectory)
+        {
             _loggerConfig = null;
             _changeTrackerConfig = null;
             _loggerConfig = null;
             AssetUtils.DeleteAllExcept(this, rootDirectory);
         }
 
-        private static DataStorageConfig CreatePlayerPrefsConfig(string storagesDirectory, DataStorageKeyResolverConfig keyResolverConfig) {
+        private static DataStorageConfig CreatePlayerPrefsConfig(string storagesDirectory,
+            DataStorageKeyResolverConfig keyResolverConfig)
+        {
             var directory = AssetUtils.CreateDirectory(storagesDirectory, DirectoryNames.PlayerPrefs);
             var serializersDirectory = AssetUtils.CreateDirectory(directory, DirectoryNames.Serializers);
             var cryptoDirectory = AssetUtils.CreateDirectory(directory, DirectoryNames.Crypto);
             var config = AssetUtils.Create<DataStoragePlayerPrefsConfig>(directory);
-            var serializerConfigs = AssetUtils.CreateAllInheritors<DataStoragePlayerPrefsSerializerConfig>(serializersDirectory);
+            var serializerConfigs =
+                AssetUtils.CreateAllInheritors<DataStoragePlayerPrefsSerializerConfig>(serializersDirectory);
             var defaultSerializer = AssetUtils.FindDefaultImplementation(serializerConfigs);
             var cryptoConfigs = AssetUtils.CreateAllInheritors<DataStoragePlayerPrefsCryptoConfig>(cryptoDirectory);
             var defaultCrypto = AssetUtils.FindDefaultImplementation(cryptoConfigs);
@@ -82,17 +89,21 @@ namespace PhlegmaticOne.DataStorage.Configuration.Provider {
             return config;
         }
 
-        private static DataStorageConfig CreateFileConfig(string storagesDirectory, DataStorageKeyResolverConfig keyResolverConfig) {
+        private static DataStorageConfig CreateFileConfig(string storagesDirectory,
+            DataStorageKeyResolverConfig keyResolverConfig)
+        {
             var directory = AssetUtils.CreateDirectory(storagesDirectory, DirectoryNames.Files);
             var serializersDirectory = AssetUtils.CreateDirectory(directory, DirectoryNames.Serializers);
             var config = AssetUtils.Create<DataStorageFileConfig>(directory);
-            var serializerConfigs = AssetUtils.CreateAllInheritors<DataStorageFileSerializerConfig>(serializersDirectory);
+            var serializerConfigs =
+                AssetUtils.CreateAllInheritors<DataStorageFileSerializerConfig>(serializersDirectory);
             var defaultSerializer = AssetUtils.FindDefaultImplementation(serializerConfigs);
             config.Setup(keyResolverConfig, defaultSerializer);
             return config;
         }
 
-        private static DataStorageConfig CreateInMemoryConfig(string storagesDirectory) {
+        private static DataStorageConfig CreateInMemoryConfig(string storagesDirectory)
+        {
             var inMemoryDirectory = AssetUtils.CreateDirectory(storagesDirectory, DirectoryNames.InMemory);
             var inMemoryConfig = AssetUtils.Create<DataStorageInMemoryConfig>(inMemoryDirectory);
             return inMemoryConfig;

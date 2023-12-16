@@ -4,16 +4,19 @@ using PhlegmaticOne.DataStorage.Configuration.Provider;
 using PhlegmaticOne.DataStorage.Provider.Base;
 using UnityEngine;
 
-namespace LoadTest {
-    public class LoadTestController : MonoBehaviour {
+namespace LoadTest
+{
+    public class LoadTestController : MonoBehaviour
+    {
         [SerializeField] private DataStorageProviderConfig _dataStorageProviderConfig;
         [SerializeField] private QueueTextLoggingController _queueTextLoggingController;
         [SerializeField] private ProcessorsDataController _processorsDataController;
         [SerializeField] private MainThreadDispatcherTest _mainThreadDispatcher;
-        
+
         private DataStorageCreationResult _creationResult;
 
-        private void Awake() {
+        private void Awake()
+        {
             _creationResult = _dataStorageProviderConfig.CreateDataStorageFromThisConfig();
             var dataStorage = _creationResult.DataStorage;
             var queueObserver = dataStorage.GetQueueObserver();
@@ -22,14 +25,16 @@ namespace LoadTest {
             _processorsDataController.Construct(dataStorage, _creationResult.ChangeTracker);
         }
 
-        private async void Start() {
+        private async void Start()
+        {
             _ = _creationResult.ChangeTracker.TrackAsync();
             await _processorsDataController.InitializeAsync();
         }
 
-        private void OnApplicationQuit() {
+        private void OnApplicationQuit()
+        {
             _queueTextLoggingController.OnReset();
             _creationResult.CancellationProvider.Cancel();
-        }        
+        }
     }
 }

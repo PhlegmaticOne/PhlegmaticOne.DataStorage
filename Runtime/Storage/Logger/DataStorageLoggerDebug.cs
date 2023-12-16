@@ -7,8 +7,8 @@ namespace PhlegmaticOne.DataStorage.Storage.ChangeTracker
 {
     public class DataStorageLoggerDebug : IDataStorageLogger
     {
-        private readonly DataStorageLoggerLogLevel _logLevel;
         private readonly bool _isDebug;
+        private readonly DataStorageLoggerLogLevel _logLevel;
 
         public DataStorageLoggerDebug(DataStorageLoggerLogLevel logLevel)
         {
@@ -28,7 +28,7 @@ namespace PhlegmaticOne.DataStorage.Storage.ChangeTracker
 
         public void LogCancellation(string cancellationSource)
         {
-            if (_logLevel.HasFlag(EventLevel.Warning))
+            if (_logLevel.HasFlag(DataStorageLoggerLogLevel.Warnings))
             {
                 LogMessage($"<color=#ffcc00>[DataStorage]: </color>{cancellationSource} - cancelled");
             }
@@ -38,7 +38,8 @@ namespace PhlegmaticOne.DataStorage.Storage.ChangeTracker
         {
             if (_logLevel.HasFlag(DataStorageLoggerLogLevel.Info))
             {
-                LogMessage($"<color=#99cc33>[DataStorage]: </color>Tracked {valueSource.TrackedChanges} changes in {valueSource.DisplayName}");
+                LogMessage(
+                    $"<color=#99cc33>[DataStorage]: </color>Tracked {valueSource.TrackedChanges} changes in {valueSource.DisplayName}");
             }
         }
 

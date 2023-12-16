@@ -1,5 +1,7 @@
-﻿namespace PhlegmaticOne.DataStorage.Configuration.Helpers {
-    internal static class DirectoryNames {
+﻿namespace PhlegmaticOne.DataStorage.Configuration.Helpers
+{
+    internal static class DirectoryNames
+    {
         public const string Infrastructure = "Infrastructure";
         public const string Storages = "Storages";
         public const string InMemory = "InMemory";

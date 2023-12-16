@@ -1,11 +1,15 @@
 ﻿using System.IO;
 using UnityEngine;
 
-namespace PhlegmaticOne.DataStorage.DataSources.FileSource.Options {
-    public class FileOptionsAppPersistentPath : IFileOptions {
+namespace PhlegmaticOne.DataStorage.DataSources.FileSource.Options
+{
+    public class FileOptionsAppPersistentPath : IFileOptions
+    {
         private readonly string _directoryName;
         private readonly string _persistentDataPath;
-        public FileOptionsAppPersistentPath(string directoryName) {
+
+        public FileOptionsAppPersistentPath(string directoryName)
+        {
             _directoryName = directoryName;
             _persistentDataPath = Application.persistentDataPath;
         }

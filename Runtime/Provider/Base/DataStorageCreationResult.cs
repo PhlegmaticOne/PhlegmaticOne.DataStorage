@@ -2,9 +2,13 @@
 using PhlegmaticOne.DataStorage.Storage.Base;
 using PhlegmaticOne.DataStorage.Storage.ChangeTracker.Base;
 
-namespace PhlegmaticOne.DataStorage.Provider.Base {
-    public class DataStorageCreationResult {
-        public DataStorageCreationResult(IDataStorage dataStorage, IChangeTracker changeTracker, IDataStorageCancellationProvider cancellationProvider) {
+namespace PhlegmaticOne.DataStorage.Provider.Base
+{
+    public class DataStorageCreationResult
+    {
+        public DataStorageCreationResult(IDataStorage dataStorage, IChangeTracker changeTracker,
+            IDataStorageCancellationProvider cancellationProvider)
+        {
             DataStorage = dataStorage;
             ChangeTracker = changeTracker;
             CancellationProvider = cancellationProvider;

@@ -1,9 +1,11 @@
 ﻿using System;
 
-namespace PhlegmaticOne.DataStorage.Storage.Queue.Observer {
-    public interface IOperationsQueueObserver {
-        event Action<QueueOperationState> OperationChanged;
+namespace PhlegmaticOne.DataStorage.Storage.Queue.Observer
+{
+    public interface IOperationsQueueObserver
+    {
         int EnqueuedOperationsCount { get; }
         int OperationsCapacity { get; }
+        event Action<QueueOperationState> OperationChanged;
     }
 }

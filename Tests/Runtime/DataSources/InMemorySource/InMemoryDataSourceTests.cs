@@ -3,19 +3,23 @@ using PhlegmaticOne.DataStorage.DataSources.InMemorySource;
 using Phlegmaticone.DataStorage.Tests.Runtime.Shared;
 using PhlegmaticOne.DataStorage.Tests.Runtime.Shared;
 
-namespace PhlegmaticOne.DataStorage.Tests.Runtime.DataSources.InMemorySource {
-    public class InMemoryDataSourceTests {
+namespace PhlegmaticOne.DataStorage.Tests.Runtime.DataSources.InMemorySource
+{
+    public class InMemoryDataSourceTests
+    {
         [Test]
-        public void DataSource_ShouldBeNullValue_BecauseValueHasNotWritten() {
+        public void DataSource_ShouldBeNullValue_BecauseValueHasNotWritten()
+        {
             var source = new InMemoryDataSource<PagedList>();
-            
+
             var actual = source.ReadAsync().GetAwaiter().GetResult();
 
             Assert.AreEqual(null, actual);
         }
-        
+
         [Test]
-        public void DataSource_ReadValueFromPlayerPrefsShouldBeEqualToExpectedValue_BecauseValueHasBeenWritten() {
+        public void DataSource_ReadValueFromPlayerPrefsShouldBeEqualToExpectedValue_BecauseValueHasBeenWritten()
+        {
             var source = new InMemoryDataSource<PagedList>();
             var expected = Data.TestList;
 
@@ -24,9 +28,10 @@ namespace PhlegmaticOne.DataStorage.Tests.Runtime.DataSources.InMemorySource {
 
             Assert.AreEqual(expected, actual);
         }
-        
+
         [Test]
-        public void DataSource_PlayerPrefsKeyShouldNotExist_BecauseValueHasBeenDeleted() {
+        public void DataSource_PlayerPrefsKeyShouldNotExist_BecauseValueHasBeenDeleted()
+        {
             var source = new InMemoryDataSource<PagedList>();
             var arranged = Data.TestList;
 

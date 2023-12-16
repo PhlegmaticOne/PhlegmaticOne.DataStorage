@@ -8,47 +8,57 @@ using TMPro;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-namespace LoadTest.Processors {
-    public abstract class ProcessorDataBase : MonoBehaviour {
+namespace LoadTest.Processors
+{
+    public abstract class ProcessorDataBase : MonoBehaviour
+    {
         public float TimeToNextAction { get; set; }
         public abstract Task OnInitialize(IDataStorage dataStorage);
         public abstract void OnActionTrackInstant(IDataStorage dataStorage);
         public abstract void OnAction(IDataStorage dataStorage);
     }
 
-    public abstract class ProcessorDataBase<T> : ProcessorDataBase where T : class, IModel {
+    public abstract class ProcessorDataBase<T> : ProcessorDataBase where T : class, IModel
+    {
         [SerializeField] private TextMeshProUGUI _nameText;
 
-        private void OnValidate() {
-            if (_nameText != null) {
+        private void OnValidate()
+        {
+            if (_nameText != null)
+            {
                 _nameText.text = typeof(T).Name;
             }
         }
 
-        public override Task OnInitialize(IDataStorage dataStorage) {
-            return dataStorage.GetOrCreateValueSource<T>().InitializeAsync();
-        }
+        public override Task OnInitialize(IDataStorage dataStorage) =>
+            dataStorage.GetOrCreateValueSource<T>().InitializeAsync();
 
-        public override void OnActionTrackInstant(IDataStorage dataStorage) {
+        public override void OnActionTrackInstant(IDataStorage dataStorage)
+        {
             var valueSource = dataStorage.GetOrCreateValueSource<T>();
-            
-            if (valueSource.HasNoValue()) {
+
+            if (valueSource.HasNoValue())
+            {
                 valueSource.SetRawValue(GetInitialValue());
             }
-            else {
+            else
+            {
                 DoRandomAction(valueSource.Value);
             }
-            
+
             valueSource.EnqueueForSaving();
         }
 
-        public override void OnAction(IDataStorage dataStorage) {
+        public override void OnAction(IDataStorage dataStorage)
+        {
             var valueSource = dataStorage.GetOrCreateValueSource<T>();
-            
-            if (valueSource.HasNoValue()) {
+
+            if (valueSource.HasNoValue())
+            {
                 valueSource.SetRawValue(GetInitialValue());
             }
-            else {
+            else
+            {
                 DoRandomAction(valueSource.TrackableValue);
             }
         }
@@ -60,21 +70,26 @@ namespace LoadTest.Processors {
         protected void ProcessRandomItemInList<TItem>(
             List<TItem> items,
             Func<TItem> itemFactory,
-            Func<TItem, TItem> itemChangeAction) 
+            Func<TItem, TItem> itemChangeAction)
         {
-            if (items.Count >= 50) {
-                if (Random.value <= 0.7) {
+            if (items.Count >= 50)
+            {
+                if (Random.value <= 0.7)
+                {
                     var removeIndex = Random.Range(0, items.Count);
                     items.RemoveAt(removeIndex);
                 }
+
                 return;
             }
 
-            if (Random.value <= 0.5 || items.Count == 0) {
+            if (Random.value <= 0.5 || items.Count == 0)
+            {
                 var item = itemFactory();
                 items.Add(item);
             }
-            else {
+            else
+            {
                 var random = Random.Range(0, items.Count);
                 items[random] = itemChangeAction(items[random]);
             }
