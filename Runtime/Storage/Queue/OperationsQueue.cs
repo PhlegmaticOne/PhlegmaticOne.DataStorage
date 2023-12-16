@@ -69,7 +69,7 @@ namespace PhlegmaticOne.DataStorage.Storage.Queue
 
             var tokenSource = _cancellationProvider.LinkWith(cancellationToken);
 
-            return Task.Run(async () =>
+            return Task.Factory.StartNew(() =>
             {
                 var token = tokenSource.Token;
 
@@ -81,7 +81,8 @@ namespace PhlegmaticOne.DataStorage.Storage.Queue
                     {
                         queueOperation = _queueOperations.Take(tokenSource.Token);
                         RaiseOperationChanged(queueOperation, QueueOperationStatus.Running);
-                        await queueOperation.ExecuteAsync(tokenSource.Token);
+                        //Wait operation in order to use Task.Factory.StartNew() with LongRunning option
+                        queueOperation.ExecuteAsync(tokenSource.Token).Wait(token);
                         RaiseOperationChanged(queueOperation, QueueOperationStatus.Completed);
                     }
                     catch (OperationCanceledException)
@@ -99,7 +100,7 @@ namespace PhlegmaticOne.DataStorage.Storage.Queue
                         tokenSource.Dispose();
                     }
                 }
-            }, tokenSource.Token);
+            }, tokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
         }
 
         private void RaiseOperationChanged(IQueueOperation operation, QueueOperationStatus status, string errorMessage = "")
