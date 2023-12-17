@@ -19,10 +19,8 @@ namespace LoadTest.Processors.Levels
             {"en", LevelState.Initial}
         });
 
-        [JsonIgnore]
-        [IgnoreDataMember]
-        [field: DataMember]
-        [field: JsonProperty]
+        [DataMember]
+        [JsonProperty]
         public Dictionary<string, LevelState> LevelStates { get; }
     }
 }

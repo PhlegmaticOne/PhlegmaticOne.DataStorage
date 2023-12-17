@@ -49,7 +49,7 @@ namespace PhlegmaticOne.DataStorage.Storage.ChangeTracker
                 LogMessage($"<color=#339900>[DataStorage]: </color>Saving changes in {valueSource.DisplayName}");
             }
         }
-
+        
         private bool ShouldLog(DataStorageLoggerLogLevel logLevel)
         {
             return _logLevel != DataStorageLoggerLogLevel.None && _logLevel.HasFlag(logLevel) && _isDebug;

@@ -9,6 +9,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 039a2063b5144611a4ca123f46d2bada, type: 3}
+  m_Script: {fileID: 11500000, guid: 6967dc6eda3644328ce656b184c8a2eb, type: 3}
   m_Name: XmlFileSerializerDefault
   m_EditorClassIdentifier: 

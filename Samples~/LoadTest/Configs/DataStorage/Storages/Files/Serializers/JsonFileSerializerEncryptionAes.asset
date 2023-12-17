@@ -9,7 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a2b17715754a4ef9a9648f8e3f954188, type: 3}
+  m_Script: {fileID: 11500000, guid: ce0b2028b5f14bd7b02edbc0dc3fa9d5, type: 3}
   m_Name: JsonFileSerializerEncryptionAes
   m_EditorClassIdentifier: 
   _privateKey: super-secret-key

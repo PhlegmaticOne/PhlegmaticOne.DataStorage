@@ -1,6 +1,6 @@
 ﻿using System.IO;
+using System.Linq;
 using PhlegmaticOne.DataStorage.Configuration.DataSources.FileSource;
-using PhlegmaticOne.DataStorage.Configuration.Helpers;
 using UnityEditor;
 using UnityEngine;
 
@@ -18,7 +18,7 @@ namespace PhlegmaticOne.DataStorage.Configuration.EditorActions
         [MenuItem("Tools/Data Storage/Clear File Storage")]
         public static void ClearFileStorage()
         {
-            var config = AssetUtils.FindScriptableObjectOfType<DataStorageFileConfig>();
+            var config = FindScriptableObjectOfType<DataStorageFileConfig>();
 
             if (config == null)
             {
@@ -38,6 +38,21 @@ namespace PhlegmaticOne.DataStorage.Configuration.EditorActions
         {
             ClearFileStorage();
             ClearPlayerPrefsStorage();
+        }
+        
+        private static T FindScriptableObjectOfType<T>(string folder = "Assets") where T : ScriptableObject
+        {
+            try
+            {
+                var filter = $"t:{typeof(T).Name}";
+                var first = AssetDatabase.FindAssets(filter, new[] {folder}).First();
+                var asset = AssetDatabase.LoadAssetAtPath<T>(AssetDatabase.GUIDToAssetPath(first));
+                return asset;
+            }
+            catch
+            {
+                return null;
+            }
         }
     }
 }

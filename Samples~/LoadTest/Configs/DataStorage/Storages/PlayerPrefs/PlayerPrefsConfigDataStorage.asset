@@ -9,7 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1ea184468c845574f87879fd654a6bf6, type: 3}
+  m_Script: {fileID: 11500000, guid: f235ebbf5af347df8b97f80b945d8c57, type: 3}
   m_Name: PlayerPrefsConfigDataStorage
   m_EditorClassIdentifier: 
   _serializerConfig: {fileID: 11400000, guid: 3f7940cf2665f564cb8bd5e251f62d95, type: 2}

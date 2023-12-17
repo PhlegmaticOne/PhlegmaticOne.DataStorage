@@ -28,16 +28,12 @@ namespace LoadTest.Processors.Levels
 
         [DataMember] public bool IsScoringLevel { get; set; }
 
-        [IgnoreDataMember]
-        [JsonIgnore]
-        [field: JsonProperty]
-        [field: DataMember]
+        [JsonProperty]
+        [DataMember]
         public List<char> Characters { get; }
 
-        [IgnoreDataMember]
-        [JsonIgnore]
-        [field: JsonProperty]
-        [field: DataMember]
+        [JsonProperty]
+        [DataMember]
         public List<string> Words { get; }
     }
 }

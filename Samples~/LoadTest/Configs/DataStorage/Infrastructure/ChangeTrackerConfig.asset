@@ -9,7 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5a6c1783b28b49fa8a23b509c68664a7, type: 3}
+  m_Script: {fileID: 11500000, guid: d98cb41cdf13489dbb31d84985ec8784, type: 3}
   m_Name: ChangeTrackerConfig
   m_EditorClassIdentifier: 
   _changeTrackerConfig:
