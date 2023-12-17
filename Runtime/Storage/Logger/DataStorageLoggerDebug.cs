@@ -6,13 +6,16 @@ namespace PhlegmaticOne.DataStorage.Storage.ChangeTracker
 {
     public class DataStorageLoggerDebug : IDataStorageLogger
     {
-        private readonly bool _isDebug;
         private readonly DataStorageLoggerLogLevel _logLevel;
+        private readonly DataStorageLoggerLogType _logType;
 
-        public DataStorageLoggerDebug(DataStorageLoggerLogLevel logLevel)
+        private bool _isLog;
+
+        public DataStorageLoggerDebug(DataStorageLoggerLogLevel logLevel, DataStorageLoggerLogType logType)
         {
             _logLevel = logLevel;
-            _isDebug = Application.isEditor || Debug.isDebugBuild;
+            _logType = logType;
+            InitializeIsLog();
         }
 
         public void LogException(Exception exception)
@@ -52,12 +55,28 @@ namespace PhlegmaticOne.DataStorage.Storage.ChangeTracker
         
         private bool ShouldLog(DataStorageLoggerLogLevel logLevel)
         {
-            return _logLevel != DataStorageLoggerLogLevel.None && _logLevel.HasFlag(logLevel) && _isDebug;
+            return _logLevel != DataStorageLoggerLogLevel.None && _logLevel.HasFlag(logLevel) && _isLog;
         }
 
         private static void LogMessage(string message)
         {
             Debug.Log(message);
+        }
+
+        private void InitializeIsLog()
+        {
+#if DEVELOPMENT_BUILD
+            if (_logType.HasFlag(DataStorageLoggerLogType.DevelopmentBuild))
+            {
+                _isLog = true;
+            }
+#endif
+#if UNITY_EDITOR
+            if (_logType.HasFlag(DataStorageLoggerLogType.Editor))
+            {
+                _isLog = true;
+            }
+#endif
         }
     }
 }

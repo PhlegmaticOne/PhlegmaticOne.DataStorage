@@ -13,3 +13,4 @@ MonoBehaviour:
   m_Name: LoggerConfig
   m_EditorClassIdentifier: 
   _logLevel: 7
+  _logType: -1
