@@ -36,6 +36,7 @@ namespace PhlegmaticOne.DataStorage.Configuration.Provider
         public DataStorageCreationResult CreateDataStorageFromThisConfig() =>
             DataStorageProvider.CreateDataStorage(this);
 
+#if UNITY_EDITOR
         public void CreateAndSetupDefaultConfigs()
         {
             var rootDirectory = AssetUtils.GetAssetDirectory(this);
@@ -108,5 +109,7 @@ namespace PhlegmaticOne.DataStorage.Configuration.Provider
             var inMemoryConfig = AssetUtils.Create<DataStorageInMemoryConfig>(inMemoryDirectory);
             return inMemoryConfig;
         }
+        
+#endif
     }
 }
