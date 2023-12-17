@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics.Tracing;
 using PhlegmaticOne.DataStorage.Storage.ValueSources;
 using UnityEngine;
 
@@ -20,7 +19,7 @@ namespace PhlegmaticOne.DataStorage.Storage.ChangeTracker
         {
             Debug.LogException(exception);
 
-            if (_logLevel.HasFlag(EventLevel.Error))
+            if (ShouldLog(DataStorageLoggerLogLevel.Errors))
             {
                 LogMessage($"<color=#cc3300>[DataStorage]: </color>Error: {exception.Message}");
             }
@@ -28,7 +27,7 @@ namespace PhlegmaticOne.DataStorage.Storage.ChangeTracker
 
         public void LogCancellation(string cancellationSource)
         {
-            if (_logLevel.HasFlag(DataStorageLoggerLogLevel.Warnings))
+            if (ShouldLog(DataStorageLoggerLogLevel.Warnings))
             {
                 LogMessage($"<color=#ffcc00>[DataStorage]: </color>{cancellationSource} - cancelled");
             }
@@ -36,7 +35,7 @@ namespace PhlegmaticOne.DataStorage.Storage.ChangeTracker
 
         public void LogTrackedChanges(IValueSource valueSource)
         {
-            if (_logLevel.HasFlag(DataStorageLoggerLogLevel.Info))
+            if (ShouldLog(DataStorageLoggerLogLevel.Info))
             {
                 LogMessage(
                     $"<color=#99cc33>[DataStorage]: </color>Tracked {valueSource.TrackedChanges} changes in {valueSource.DisplayName}");
@@ -45,20 +44,20 @@ namespace PhlegmaticOne.DataStorage.Storage.ChangeTracker
 
         public void LogSaving(IValueSource valueSource)
         {
-            if (_logLevel.HasFlag(DataStorageLoggerLogLevel.Info))
+            if (ShouldLog(DataStorageLoggerLogLevel.Info))
             {
                 LogMessage($"<color=#339900>[DataStorage]: </color>Saving changes in {valueSource.DisplayName}");
             }
         }
 
-        private void LogMessage(string message)
+        private bool ShouldLog(DataStorageLoggerLogLevel logLevel)
         {
-            if (ShouldLog())
-            {
-                Debug.Log(message);
-            }
+            return _logLevel != DataStorageLoggerLogLevel.None && _logLevel.HasFlag(logLevel) && _isDebug;
         }
 
-        private bool ShouldLog() => _logLevel != DataStorageLoggerLogLevel.None && _isDebug;
+        private static void LogMessage(string message)
+        {
+            Debug.Log(message);
+        }
     }
 }
