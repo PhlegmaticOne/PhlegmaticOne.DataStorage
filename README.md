@@ -173,6 +173,8 @@ public class SampleDataStorageUsage : MonoBehaviour {
 
 ## Zenject Installer
 
+```DataStorage``` and ```ValueSource<T>``` types can be registered in DI-container. Way to setup registration of these types for Zenject is shown below.
+
 ```cs
 public static class DataStorageZenjectExtensions
 {
@@ -205,4 +207,97 @@ public class DataStorageInstaller : MonoInstaller {
         //Container.BindValueSource<AnyModel>();
     }
 }
+```
+
+## Firebase Database
+
+```DataStorage``` can be extended for working with Firebase Database. Types for implementation Firebase Database storage is shown below.
+
+### ```KeyResolver```
+
+```cs
+public class FirebaseKeyResolver : IKeyResolver
+{
+    private readonly IKeyResolver _keyResolver;
+
+    public FirebaseKeyResolver(IKeyResolver keyResolver)
+    {
+        _keyResolver = keyResolver;
+    }
+    
+    public string ResolveKey<T>() {
+        var key = _keyResolver.ResolveKey<T>();
+        var userId = FirebaseAuth.DefaultInstance.CurrentUser.UserId;
+        return string.Concat("/users/", userId, "/", key);
+    }
+}
+```
+
+### ```FirebaseDataSourceFactory```
+
+```cs
+public class FirebaseDataSourceFactory : IDataSourceFactory
+{
+    private readonly IKeyResolver _keyResolver;
+
+    public FirebaseDataSourceFactory(IKeyResolver keyResolver) {
+        _keyResolver = keyResolver;
+    }
+    
+    public DataSourceBase<T> CreateDataSource<T>() where T : class, IModel {
+        var keyResolver = new FirebaseKeyResolver(_keyResolver);
+        return new FirebaseDataSource<T>(keyResolver);
+    }
+}
+```
+
+### ```FirebaseDataStorageConfig```
+
+```cs
+[CreateAssetMenu(menuName = "Data Storage/Storages/Firebase", fileName = "FirebaseConfigDataStorage")]
+public class FirebaseDataStorageConfig : DataStorageConfigBase
+{
+    [SerializeField] private DataStorageKeyResolverConfigurationBase _keyResolver;
+    
+    public override IDataSourceFactory GetSourceFactory()
+    {
+        return new FirebaseDataSourceFactory(_keyResolver.GetKeyResolver());
+    }
+}
+```
+
+### ```FirebaseDataSource<T>```
+
+```cs
+public class FirebaseDataSource<T> : DataSourceBase<T> where T : class, IModel
+{
+    private readonly string _referencePath;
+    private readonly DatabaseReference _reference;
+
+    public FirebaseDataSource(IKeyResolver keyResolver) {
+        _reference = FirebaseDatabase.DefaultInstance.RootReference;
+        _referencePath = keyResolver.ResolveKey<T>();
+    }
+
+    protected override Task WriteAsync(T value, CancellationToken cancellationToken = default) {
+        return NodeReference().SetRawJsonValueAsync(ToJson(value));
+    }
+
+    public override Task DeleteAsync(CancellationToken cancellationToken = default) {
+        return NodeReference().RemoveValueAsync();
+    }
+
+    public override async Task<T> ReadAsync(CancellationToken cancellationToken = default) {
+        var snapshot = await NodeReference().GetValueAsync();
+        return GetValueFromDatabase(snapshot);
+    }
+
+    private static T GetValueFromDatabase(DataSnapshot snapshot) {
+        var json = snapshot.GetRawJsonValue();
+        return string.IsNullOrEmpty(json) ? default : JsonConvert.DeserializeObject<T>(json);
+    }
+
+    private DatabaseReference NodeReference() => _reference.Child(_referencePath);
+    private static string ToJson(T value) => JsonConvert.SerializeObject(value);
+    }
 ```
