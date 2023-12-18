@@ -12,5 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 964d9ebe8d754fb8ab9c11f657b13acc, type: 3}
   m_Name: LoggerConfig
   m_EditorClassIdentifier: 
-  _logLevel: 7
+  _logLevel: -1
   _logType: -1

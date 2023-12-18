@@ -1,9 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using LoadTest.Processors;
 using PhlegmaticOne.DataStorage.Storage.Base;
 using PhlegmaticOne.DataStorage.Storage.ChangeTracker.Base;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace LoadTest.Controllers
 {
@@ -16,8 +18,8 @@ namespace LoadTest.Controllers
     public class ProcessorsDataController : MonoBehaviour
     {
         [SerializeField] private List<ProcessorDataBase> _processorsData;
-        [SerializeField] private float _minActionTime;
-        [SerializeField] private float _maxActionTime;
+        [SerializeField] [Range(0.001f, 5f)] private float _minActionTime;
+        [SerializeField] [Range(0.001f, 5f)] private float _maxActionTime;
         [SerializeField] private TrackActionType _trackActionType;
         private IChangeTracker _changeTracker;
 

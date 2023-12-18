@@ -7,6 +7,7 @@ namespace PhlegmaticOne.DataStorage.Storage.ChangeTracker
     {
         None = 0,
         Editor = 1,
-        DevelopmentBuild = 2
+        DevelopmentBuild = 2,
+        Android = 4
     }
 }

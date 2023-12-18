@@ -77,6 +77,12 @@ namespace PhlegmaticOne.DataStorage.Storage.ChangeTracker
                 _isLog = true;
             }
 #endif
+#if UNITY_ANDROID
+            if (_logType.HasFlag(DataStorageLoggerLogType.Android))
+            {
+                _isLog = true;
+            }
+#endif
         }
     }
 }
