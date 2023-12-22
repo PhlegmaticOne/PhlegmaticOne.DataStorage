@@ -244,7 +244,7 @@ public class FirebaseDataSourceFactory : IDataSourceFactory
         _keyResolver = keyResolver;
     }
     
-    public DataSourceBase<T> CreateDataSource<T>() where T : class, IModel {
+    public IDataSource<T> CreateDataSource<T>(DataSourceFactoryContext context) where T : class, IModel {
         var keyResolver = new FirebaseKeyResolver(_keyResolver);
         return new FirebaseDataSource<T>(keyResolver);
     }
@@ -254,10 +254,10 @@ public class FirebaseDataSourceFactory : IDataSourceFactory
 ### ```FirebaseDataStorageConfig```
 
 ```cs
-[CreateAssetMenu(menuName = "Data Storage/Storages/Firebase", fileName = "FirebaseConfigDataStorage")]
-public class FirebaseDataStorageConfig : DataStorageConfigBase
+[CreateAssetMenu(menuName = "Data Storage/Storages/Firebase Database", fileName = "FirebaseConfigDataStorage")]
+public class FirebaseDataStorageConfig : DataStorageConfig
 {
-    [SerializeField] private DataStorageKeyResolverConfigurationBase _keyResolver;
+    [SerializeField] private DataStorageKeyResolverConfig _keyResolver;
     
     public override IDataSourceFactory GetSourceFactory()
     {
@@ -269,7 +269,7 @@ public class FirebaseDataStorageConfig : DataStorageConfigBase
 ### ```FirebaseDataSource<T>```
 
 ```cs
-public class FirebaseDataSource<T> : DataSourceBase<T> where T : class, IModel
+public class FirebaseDataSource<T> : IDataSource<T> where T : class, IModel
 {
     private readonly string _referencePath;
     private readonly DatabaseReference _reference;
@@ -279,15 +279,15 @@ public class FirebaseDataSource<T> : DataSourceBase<T> where T : class, IModel
         _referencePath = keyResolver.ResolveKey<T>();
     }
 
-    protected override Task WriteAsync(T value, CancellationToken cancellationToken = default) {
+    public Task WriteAsync(T value, CancellationToken cancellationToken = default) {
         return NodeReference().SetRawJsonValueAsync(ToJson(value));
     }
 
-    public override Task DeleteAsync(CancellationToken cancellationToken = default) {
+    public Task DeleteAsync(CancellationToken cancellationToken = default) {
         return NodeReference().RemoveValueAsync();
     }
 
-    public override async Task<T> ReadAsync(CancellationToken cancellationToken = default) {
+    public async Task<T> ReadAsync(CancellationToken cancellationToken = default) {
         var snapshot = await NodeReference().GetValueAsync();
         return GetValueFromDatabase(snapshot);
     }
@@ -299,5 +299,5 @@ public class FirebaseDataSource<T> : DataSourceBase<T> where T : class, IModel
 
     private DatabaseReference NodeReference() => _reference.Child(_referencePath);
     private static string ToJson(T value) => JsonConvert.SerializeObject(value);
-    }
+}
 ```
