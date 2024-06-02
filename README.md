@@ -4,7 +4,7 @@
 
 ## ```IDataStorage```
 
-Interface defines methods for reading and writing data. Default implementation can read and save data in PlayerPrefs and Files.
+Interface defines methods for reading and writing data. Default implementation can read and save data in Memory, PlayerPrefs and Files.
 
 ## ```ChangeTracker```
 
@@ -17,12 +17,24 @@ It seems to be more convenient to work with ```IValueSource<T>``` instead of ```
 
 ### ```Value``` and ```TrackableValue```
 
-- ```TrackableValue``` - should be called for editable operations - ```ChangeTracker``` will save model if ```TrackedChanges > 0``` and ```AsTrackable``` increases that value
+- ```TrackableValue``` - should be called for editable operations - ```ChangeTracker``` will save model if ```TrackedChanges > 0``` and ```TrackableValue``` increases that value
 - ```Value``` - should be called for readonly operations - ```TrackedChanges``` will not be increased
 
 If ```ChangeTracker``` is not working calling ```Value``` or ```TrackableValue``` is the same.
 
 # Usage
+
+## Build ```IDataStorage```
+
+```cs
+var dataStorage = DataStorageBuilder.Create()
+                .UseDataSource(x => x.InMemory())
+                //.UseDataSource(x => x.PlayerPrefs())
+                //.UseDataSource(x => x.File())
+                .UseLogger() // Not required - no logs
+                .UseChangeTracker() //Not required - change tracker will not start
+                .Build();
+```
 
 ## Model
 
@@ -82,91 +94,27 @@ public class CoinsService : ICoinsService {
 }
 ```
 
-## Change Tracker Config
-
-- ```TimeInterval``` - saves all tracked changes every ```TimeInterval``` seconds
-- ```TimeDelay``` - initial delay before change tracking starts
-
-Available at Create -> Data Storage -> Infrastructure -> Change Tracker Config
-
-## Key Resolver Configuration
-
-Creates an object that defines the key by which the data will be saved: for files this is the file name, for PlayerPrefs this is the key for PlayerPrefs. 
-The standard implementation returns the class name as the key - ```typeof(T).Name``` formatted with specified format
-
-Available at Create -> Data Storage -> Infrastructure -> Type Name Key Resolver Configuration
-
-## Logger Configuration
-
-Defines single configuration which is logger Log level. 
-This field is an enum with flags attribute and therefore its values can be conbined in different ways.
-
-Available at Create -> Data Storage -> Infrastructure -> Logger Config
-
-## Operation Queue Configuration
-
-Defines single configuration which is queue operations capacity.
-Is this option is ```-1``` then Logger queue can have unlimited operation, if this option is positive number then it is operations queue capacity.
-
-Available at Create -> Data Storage -> Infrastructure -> Operations Queue Config
-
-## Storage configs
-
-Package includes following storages and their configs:
-- ```InMemory``` - all data is stored in memory only in the current session and is cleared when exiting the game
-- ```PlayerPrefs``` - data is stroring in PlayerPrefs in one of 2 possible formats: JSON or XML. Also data encryption/decryption is available.
-- ```Files``` - data is stroring in files in one of 3 possible formats: JSON, XML or Binary. Also data encryption/decryption is available.
-
-Available at Create -> Data Storage -> Storages -> {StorageType}
-
-## Data Storage Provider config
-
-![image](https://github.com/PhlegmaticOne/PhlegmaticOne.DataStorage/assets/73738250/e709c8e7-fd8c-4470-b726-7b840846cb1b)
-
-Includes infrastructure configs such as Logger Config, Operations Queue Config, Change Tracker Config and one of configured Storage configs.
-
-Config has Editor button, which creates all infrastructure configs and all storage configs in directory (with default values), where this config is located.
-
-# Setup from Editor
-
-## Test scene
-
-![image](https://github.com/PhlegmaticOne/PhlegmaticOne.DataStorage/assets/73738250/a50630be-a9a9-4919-958e-e1e70911b813)
-
-## Test scripts setup on Scene
-
-![image](https://github.com/PhlegmaticOne/PhlegmaticOne.DataStorage/assets/73738250/0d306d7b-d481-45d1-bb62-9304f393f058)
-
 ## Test script
 ```cs
-public class SampleDataStorageUsage : MonoBehaviour {
-    [SerializeField] private DataStorageProviderConfig _dataStorageProviderConfig;
-    [SerializeField] private ChangePlayerCoinsController _changePlayerCoinsController;
-    [SerializeField] private QueueTextLoggingController _queueTextLoggingController;
-    [SerializeField] private MainThreadDispatcherTest _mainThreadDispatcher;
+public class SampleDataStorageUsage : MonoBehaviour
+{
+    private IDataStorage _dataStorage;
 
-    private DataStorageCreationResult _creationResult;
-
-    private void Awake() {
-        _creationResult = _dataStorageProviderConfig.CreateDataStorageFromThisConfig();
-        var dataStorage = _creationResult.DataStorage;
-        var valueSource = dataStorage.GetOrCreateValueSource<CoinsState>();
+    private void Awake()
+    {
+        _dataStorage = DataStorageBuilder.Create()
+            .UseDataSource(x => x.PlayerPrefs())
+            .UseLogger()
+            .UseChangeTracker()
+            .Build();
+        
+        var valueSource = _dataStorage.GetValueSource<CoinsState>("coins");
         var coinsService = new CoinsService(valueSource);
-        var queueObserver = dataStorage.GetQueueObserver();
-    
-        _changePlayerCoinsController.Construct(coinsService);
-        _queueTextLoggingController.Construct(queueObserver, _mainThreadDispatcher);
     }
 
-    private async void Start() {
-        _ = _creationResult.ChangeTracker.TrackAsync();
-        await _changePlayerCoinsController.InitializeAsync();
-    }
-
-    private void OnApplicationQuit() {
-        _changePlayerCoinsController.OnReset();
-        _queueTextLoggingController.OnReset();
-        _creationResult.CancellationProvider.Cancel();
+    private void OnApplicationQuit()
+    {
+        _dataStorage.Cancel();
     }
 }
 ```
@@ -188,11 +136,10 @@ public class ValueSourceFactory<T> : IFactory<IValueSource<T>> where T : class, 
 {
     private readonly IDataStorage _dataStorage;
     public ValueSourceFactory(IDataStorage dataStorage) => _dataStorage = dataStorage;
-    public IValueSource<T> Create() => _dataStorage.GetOrCreateValueSource<T>();
+    public IValueSource<T> Create() => _dataStorage.GetValueSource<T>();
 }
 
 public class DataStorageInstaller : MonoInstaller {
-    [SerializeField] private DataStorageProviderConfig _dataStorageProvider;
     
     public override void InstallBindings() {
         BindDataStorage();
@@ -200,104 +147,15 @@ public class DataStorageInstaller : MonoInstaller {
 
     private void BindDataStorage()
     {
-        var creationResult = _dataStorageProvider.CreateDataStorageFromThisConfig();
+        var dataStorage = DataStorageBuilder.Create()
+                .UseDataSource(x => x.PlayerPrefs())
+                .UseLogger()
+                .UseChangeTracker()
+                .Build();
         
-        Container.Bind<IDataStorage>().FromInstance(creationResult.DataStorage).AsSingle();
+        Container.Bind<IDataStorage>().FromInstance(dataStorage).AsSingle();
         
         //Container.BindValueSource<AnyModel>();
     }
-}
-```
-
-## Firebase Database
-
-```DataStorage``` can be extended for working with Firebase Database. Types for implementation Firebase Database storage is shown below.
-
-### ```KeyResolver```
-
-```cs
-public class FirebaseKeyResolver : IKeyResolver
-{
-    private readonly IKeyResolver _keyResolver;
-
-    public FirebaseKeyResolver(IKeyResolver keyResolver)
-    {
-        _keyResolver = keyResolver;
-    }
-    
-    public string ResolveKey<T>() {
-        var key = _keyResolver.ResolveKey<T>();
-        var userId = FirebaseAuth.DefaultInstance.CurrentUser.UserId;
-        return string.Concat("/users/", userId, "/", key);
-    }
-}
-```
-
-### ```FirebaseDataSourceFactory```
-
-```cs
-public class FirebaseDataSourceFactory : IDataSourceFactory
-{
-    private readonly IKeyResolver _keyResolver;
-
-    public FirebaseDataSourceFactory(IKeyResolver keyResolver) {
-        _keyResolver = keyResolver;
-    }
-    
-    public IDataSource<T> CreateDataSource<T>(DataSourceFactoryContext context) where T : class, IModel {
-        var keyResolver = new FirebaseKeyResolver(_keyResolver);
-        return new FirebaseDataSource<T>(keyResolver);
-    }
-}
-```
-
-### ```FirebaseDataStorageConfig```
-
-```cs
-[CreateAssetMenu(menuName = "Data Storage/Storages/Firebase Database", fileName = "FirebaseConfigDataStorage")]
-public class FirebaseDataStorageConfig : DataStorageConfig
-{
-    [SerializeField] private DataStorageKeyResolverConfig _keyResolver;
-    
-    public override IDataSourceFactory GetSourceFactory()
-    {
-        return new FirebaseDataSourceFactory(_keyResolver.GetKeyResolver());
-    }
-}
-```
-
-### ```FirebaseDataSource<T>```
-
-```cs
-public class FirebaseDataSource<T> : IDataSource<T> where T : class, IModel
-{
-    private readonly string _referencePath;
-    private readonly DatabaseReference _reference;
-
-    public FirebaseDataSource(IKeyResolver keyResolver) {
-        _reference = FirebaseDatabase.DefaultInstance.RootReference;
-        _referencePath = keyResolver.ResolveKey<T>();
-    }
-
-    public Task WriteAsync(T value, CancellationToken cancellationToken = default) {
-        return NodeReference().SetRawJsonValueAsync(ToJson(value));
-    }
-
-    public Task DeleteAsync(CancellationToken cancellationToken = default) {
-        return NodeReference().RemoveValueAsync();
-    }
-
-    public async Task<T> ReadAsync(CancellationToken cancellationToken = default) {
-        var snapshot = await NodeReference().GetValueAsync();
-        return GetValueFromDatabase(snapshot);
-    }
-
-    private static T GetValueFromDatabase(DataSnapshot snapshot) {
-        var json = snapshot.GetRawJsonValue();
-        return string.IsNullOrEmpty(json) ? default : JsonConvert.DeserializeObject<T>(json);
-    }
-
-    private DatabaseReference NodeReference() => _reference.Child(_referencePath);
-    private static string ToJson(T value) => JsonConvert.SerializeObject(value);
 }
 ```
