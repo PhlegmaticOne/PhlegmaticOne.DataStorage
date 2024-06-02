@@ -2,19 +2,17 @@
 using PhlegmaticOne.DataStorage.Storage.ValueSources;
 using UnityEngine;
 
-namespace PhlegmaticOne.DataStorage.Storage.ChangeTracker
+namespace PhlegmaticOne.DataStorage.Storage.Logger
 {
-    public class DataStorageLoggerDebug : IDataStorageLogger
+    internal sealed class DataStorageLoggerDebug : IDataStorageLogger
     {
-        private readonly DataStorageLoggerLogLevel _logLevel;
-        private readonly DataStorageLoggerLogType _logType;
+        private readonly DataStorageLoggerConfig _loggerConfig;
 
         private bool _isLog;
 
-        public DataStorageLoggerDebug(DataStorageLoggerLogLevel logLevel, DataStorageLoggerLogType logType)
+        public DataStorageLoggerDebug(DataStorageLoggerConfig loggerConfig)
         {
-            _logLevel = logLevel;
-            _logType = logType;
+            _loggerConfig = loggerConfig;
             InitializeIsLog();
         }
 
@@ -41,21 +39,22 @@ namespace PhlegmaticOne.DataStorage.Storage.ChangeTracker
             if (ShouldLog(DataStorageLoggerLogLevel.Info))
             {
                 LogMessage(
-                    $"<color=#99cc33>[DataStorage]: </color>Tracked {valueSource.TrackedChanges} changes in {valueSource.DisplayName}");
+                    $"<color=#99cc33>[DataStorage]: </color>Tracked {valueSource.TrackedChanges} changes in {valueSource}");
             }
         }
 
-        public void LogSaving(IValueSource valueSource)
+        public void LogSaving(string key)
         {
             if (ShouldLog(DataStorageLoggerLogLevel.Info))
             {
-                LogMessage($"<color=#339900>[DataStorage]: </color>Saving changes in {valueSource.DisplayName}");
+                LogMessage($"<color=#339900>[DataStorage]: </color>Saving changes in {key}");
             }
         }
         
         private bool ShouldLog(DataStorageLoggerLogLevel logLevel)
         {
-            return _logLevel != DataStorageLoggerLogLevel.None && _logLevel.HasFlag(logLevel) && _isLog;
+            var configLogLevel = _loggerConfig.LogLevel;
+            return configLogLevel != DataStorageLoggerLogLevel.None && configLogLevel.HasFlag(logLevel) && _isLog;
         }
 
         private static void LogMessage(string message)
@@ -65,20 +64,22 @@ namespace PhlegmaticOne.DataStorage.Storage.ChangeTracker
 
         private void InitializeIsLog()
         {
+            var logType = _loggerConfig.LogType;
+            
 #if DEVELOPMENT_BUILD
-            if (_logType.HasFlag(DataStorageLoggerLogType.DevelopmentBuild))
+            if (logType.HasFlag(DataStorageLoggerLogType.DevelopmentBuild))
             {
                 _isLog = true;
             }
 #endif
 #if UNITY_EDITOR
-            if (_logType.HasFlag(DataStorageLoggerLogType.Editor))
+            if (logType.HasFlag(DataStorageLoggerLogType.Editor))
             {
                 _isLog = true;
             }
 #endif
 #if UNITY_ANDROID
-            if (_logType.HasFlag(DataStorageLoggerLogType.Android))
+            if (logType.HasFlag(DataStorageLoggerLogType.Android))
             {
                 _isLog = true;
             }

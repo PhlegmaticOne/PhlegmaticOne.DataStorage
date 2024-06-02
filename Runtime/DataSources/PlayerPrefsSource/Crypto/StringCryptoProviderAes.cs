@@ -2,6 +2,7 @@
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
+using JetBrains.Annotations;
 using PhlegmaticOne.DataStorage.Infrastructure.Crypto;
 
 namespace PhlegmaticOne.DataStorage.DataSources.PlayerPrefsSource.Crypto
@@ -10,13 +11,15 @@ namespace PhlegmaticOne.DataStorage.DataSources.PlayerPrefsSource.Crypto
     {
         private readonly AesCryptoProviderWrapper _aesCryptoProviderWrapper;
 
-        public StringCryptoProviderAes(string privateKey) =>
+        public StringCryptoProviderAes([CanBeNull] string privateKey = null)
+        {
             _aesCryptoProviderWrapper = new AesCryptoProviderWrapper(privateKey);
+        }
 
         public string Encrypt(string plainText)
         {
             using var memoryStream = new MemoryStream();
-            using var provider = _aesCryptoProviderWrapper.CreateProviderForEncryption(memoryStream);
+            using var provider = _aesCryptoProviderWrapper.CreateEncryptionProvider(memoryStream);
             using var encryptor = provider.CreateEncryptor(provider.Key, provider.IV);
             using var cryptoStream = new CryptoStream(memoryStream, encryptor, CryptoStreamMode.Write);
 
@@ -24,7 +27,7 @@ namespace PhlegmaticOne.DataStorage.DataSources.PlayerPrefsSource.Crypto
 
             cryptoStream.Write(encryptionBytes, 0, encryptionBytes.Length);
             cryptoStream.FlushFinalBlock();
-
+            
             var resultBytes = memoryStream.ToArray();
             return Convert.ToBase64String(resultBytes);
         }
@@ -33,7 +36,7 @@ namespace PhlegmaticOne.DataStorage.DataSources.PlayerPrefsSource.Crypto
         {
             var encryptedBytes = Convert.FromBase64String(encryptedText);
             using var memoryStream = new MemoryStream(encryptedBytes);
-            using var provider = _aesCryptoProviderWrapper.CreateProviderForDecryption(memoryStream);
+            using var provider = _aesCryptoProviderWrapper.CreateDecryptionProvider(memoryStream);
             using var decryptor = provider.CreateDecryptor();
             using var cryptoStream = new CryptoStream(memoryStream, decryptor, CryptoStreamMode.Read);
             using var streamReader = new StreamReader(cryptoStream);

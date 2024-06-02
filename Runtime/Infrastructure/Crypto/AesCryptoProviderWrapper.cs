@@ -4,17 +4,19 @@ using System.Text;
 
 namespace PhlegmaticOne.DataStorage.Infrastructure.Crypto
 {
-    public class AesCryptoProviderWrapper
+    internal sealed class AesCryptoProviderWrapper
     {
         private const int AesKeyLength = 16;
         private const string DefaultPrivateKey = "super-secret-key";
 
         private readonly byte[] _privateKeyData;
 
-        public AesCryptoProviderWrapper(string privateKey) =>
+        public AesCryptoProviderWrapper(string privateKey)
+        {
             _privateKeyData = Encoding.UTF8.GetBytes(ProcessPrivateKey(privateKey));
+        }
 
-        public AesCryptoServiceProvider CreateProviderForDecryption(Stream stream)
+        public AesCryptoServiceProvider CreateDecryptionProvider(Stream stream)
         {
             var aes = new AesCryptoServiceProvider
             {
@@ -27,7 +29,7 @@ namespace PhlegmaticOne.DataStorage.Infrastructure.Crypto
             return aes;
         }
 
-        public AesCryptoServiceProvider CreateProviderForEncryption(Stream stream)
+        public AesCryptoServiceProvider CreateEncryptionProvider(Stream stream)
         {
             var aes = new AesCryptoServiceProvider
             {
@@ -51,12 +53,12 @@ namespace PhlegmaticOne.DataStorage.Infrastructure.Crypto
 
         private static string ProcessPrivateKey(string privateKey)
         {
-            if (string.IsNullOrWhiteSpace(privateKey))
+            if (string.IsNullOrEmpty(privateKey))
             {
                 privateKey = DefaultPrivateKey;
             }
 
-            return privateKey.Length > AesKeyLength ? privateKey.Substring(0, AesKeyLength) : privateKey;
+            return privateKey.Length > AesKeyLength ? privateKey[..AesKeyLength] : privateKey;
         }
     }
 }

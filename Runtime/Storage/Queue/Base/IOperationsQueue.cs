@@ -1,12 +1,9 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-using PhlegmaticOne.DataStorage.Storage.Queue.Observer;
-
-namespace PhlegmaticOne.DataStorage.Storage.Queue.Base
+﻿namespace PhlegmaticOne.DataStorage.Storage.Queue.Base
 {
-    public interface IOperationsQueue : IOperationsQueueObserver
+    public interface IOperationsQueue
     {
-        void EnqueueOperation(IQueueOperation queueOperation, CancellationToken cancellationToken = default);
-        Task ExecuteOperationsAsync(CancellationToken cancellationToken = default);
+        int Count { get; }
+        void Run();
+        void EnqueueOperation(IQueueOperation queueOperation);
     }
 }

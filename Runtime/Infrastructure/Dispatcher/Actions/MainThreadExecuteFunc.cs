@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace PhlegmaticOne.DataStorage.Infrastructure.Dispatcher.Actions
 {
-    public class MainThreadExecuteFunc<T> : IMainThreadAction
+    internal sealed class MainThreadExecuteFunc<T> : IMainThreadAction
     {
         private readonly IMainThreadFunc<T> _func;
         private readonly TaskCompletionSource<T> _taskCompletionSource;

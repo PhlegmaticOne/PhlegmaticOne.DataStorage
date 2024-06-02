@@ -1,30 +1,26 @@
 ﻿using System;
-using System.Threading;
 using System.Threading.Tasks;
 using PhlegmaticOne.DataStorage.Contracts;
 using PhlegmaticOne.DataStorage.DataSources;
 using PhlegmaticOne.DataStorage.Infrastructure.Cancellation;
 using PhlegmaticOne.DataStorage.Infrastructure.Helpers;
 using PhlegmaticOne.DataStorage.Storage.Base;
-using PhlegmaticOne.DataStorage.Storage.ChangeTracker;
+using PhlegmaticOne.DataStorage.Storage.Logger;
 using PhlegmaticOne.DataStorage.Storage.Queue.Base;
-using PhlegmaticOne.DataStorage.Storage.Queue.Observer;
 using PhlegmaticOne.DataStorage.Storage.Queue.Operations;
 using PhlegmaticOne.DataStorage.Storage.ValueSources;
 
 namespace PhlegmaticOne.DataStorage.Storage
 {
-    public class DataStorage : IDataStorage
+    internal sealed class DataStorage : IDataStorage
     {
-        private static readonly object Sync = new object();
-        
         private readonly IDataStorageCancellationProvider _cancellationProvider;
         private readonly ValueSourceCollection _valueSourceCollection;
         private readonly IOperationsQueue _operationsQueue;
         private readonly DataSourcesSet _dataSourcesSet;
         private readonly IDataStorageLogger _logger;
 
-        public DataStorage(
+        internal DataStorage(
             IDataStorageLogger logger,
             DataSourcesSet dataSourcesSet,
             IOperationsQueue operationsQueue,
@@ -37,109 +33,94 @@ namespace PhlegmaticOne.DataStorage.Storage
             _operationsQueue = ExceptionHelper.EnsureNotNull(operationsQueue, nameof(operationsQueue));
         }
 
-        public async Task<T> ReadAsync<T>(CancellationToken ct = default) where T : class, IModel
+        public Task<T> ReadAsync<T>(string key) where T : class, IModel
         {
-            var tokenSource = _cancellationProvider.LinkWith(ct);
-
             try
             {
                 var source = _dataSourcesSet.Source<T>();
-                return await source.ReadAsync(tokenSource.Token);
+                return source.ReadAsync(key, _cancellationProvider.Token);
             }
             catch (Exception exception)
             {
                 _logger.LogException(exception);
-                return await Task.FromException<T>(exception);
-            }
-            finally
-            {
-                tokenSource.Dispose();
+                return Task.FromResult<T>(default);
             }
         }
 
-        public async Task SaveAsync<T>(T value, CancellationToken ct = default) where T : class, IModel
+        public Task SaveAsync<T>(string key, T value) where T : class, IModel
         {
-            var tokenSource = _cancellationProvider.LinkWith(ct);
-
             try
             {
                 var source = _dataSourcesSet.Source<T>();
-                await source.WriteAsync(value, tokenSource.Token);
+                return source.WriteAsync(key, value, _cancellationProvider.Token);
             }
             catch (Exception exception)
             {
                 _logger.LogException(exception);
-                await Task.FromException(exception);
-            }
-            finally
-            {
-                tokenSource.Dispose();
+                return Task.CompletedTask;
             }
         }
 
-        public async Task DeleteAsync<T>(CancellationToken ct = default) where T : class, IModel
+        public Task DeleteAsync<T>(string key) where T : class, IModel
         {
-            var tokenSource = _cancellationProvider.LinkWith(ct);
-
             try
             {
                 var source = _dataSourcesSet.Source<T>();
-                await source.DeleteAsync(tokenSource.Token);
+                return source.DeleteAsync(key, _cancellationProvider.Token);
             }
             catch (Exception exception)
             {
                 _logger.LogException(exception);
-                await Task.FromException(exception);
-            }
-            finally
-            {
-                tokenSource.Dispose();
+                return Task.CompletedTask;
             }
         }
 
-        public IValueSource<T> GetOrCreateValueSource<T>() where T : class, IModel
+        public IValueSource<T> GetValueSource<T>(string key) where T : class, IModel, new()
         {
-            if (_valueSourceCollection.TryGet<T>(out var existing))
+            if (_valueSourceCollection.TryGet<T>(key, out var existing))
             {
                 return existing;
             }
 
-            var valueSource = new ValueSource<T>(this);
-            _valueSourceCollection.Add(valueSource);
+            var valueSource = new ValueSource<T>(this, key);
+            _valueSourceCollection.Add(key, valueSource);
             return valueSource;
         }
 
-        public IOperationsQueueObserver GetQueueObserver() => _operationsQueue;
-
-        public void EnqueueForSaving<T>(IValueSource<T> value, CancellationToken ct = default) where T : class, IModel
+        public void EnqueueSave<T>(string key, T value) where T : class, IModel
         {
-            var operation = new QueueOperationSaveState<T>(value, _logger, this);
-            _operationsQueue.EnqueueOperation(operation, ct);
+            var operation = new QueueOperationSaveState<T>(key, value, _logger, this);
+            _operationsQueue.EnqueueOperation(operation);
         }
 
-        public void EnqueueForDeleting<T>(CancellationToken ct = default) where T : class, IModel
+        public void EnqueueDelete<T>(string key) where T : class, IModel
         {
-            var operation = new QueueOperationDeleteState<T>(this);
-            _operationsQueue.EnqueueOperation(operation, ct);
+            var operation = new QueueOperationDeleteState<T>(this, key);
+            _operationsQueue.EnqueueOperation(operation);
         }
 
-        public void RequestTrackedChangesSaving()
+        public void RequestSaveChanges()
         {
-            lock (Sync)
+            lock (_valueSourceCollection)
             {
                 foreach (var source in _valueSourceCollection)
                 {
                     var valueSource = source.Value;
 
-                    if (valueSource.HasChanges() == false)
+                    if (!valueSource.HasChanges())
                     {
                         continue;
                     }
 
                     _logger.LogTrackedChanges(valueSource);
-                    valueSource.EnqueueForSaving();
+                    valueSource.EnqueueSave();
                 }
             }
+        }
+
+        public void Cancel()
+        {
+            _cancellationProvider.Cancel();
         }
     }
 }

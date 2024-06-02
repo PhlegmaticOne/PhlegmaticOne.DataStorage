@@ -1,18 +1,18 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
+using PhlegmaticOne.DataStorage.Contracts;
 
 namespace PhlegmaticOne.DataStorage.Storage.ValueSources
 {
     public interface IValueSource
     {
+        string Key { get; }
         int TrackedChanges { get; }
-        string DisplayName { get; }
-        Task InitializeAsync(CancellationToken cancellationToken = default);
-        void EnqueueForSaving(CancellationToken cancellationToken = default);
-        void EnqueueForDeleting(CancellationToken cancellationToken = default);
+        Task InitializeAsync();
+        void EnqueueSave();
+        void EnqueueDelete();
     }
 
-    public interface IValueSource<T> : IValueSource
+    public interface IValueSource<T> : IValueSource where T : IModel, new()
     {
         T TrackableValue { get; }
         T Value { get; }

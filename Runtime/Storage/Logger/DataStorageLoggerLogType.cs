@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace PhlegmaticOne.DataStorage.Storage.ChangeTracker
+namespace PhlegmaticOne.DataStorage.Storage.Logger
 {
     [Flags]
     public enum DataStorageLoggerLogType

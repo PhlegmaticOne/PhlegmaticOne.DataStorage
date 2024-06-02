@@ -5,8 +5,9 @@ namespace PhlegmaticOne.DataStorage.Infrastructure.Dispatcher
 {
     public interface IMainThreadDispatcher
     {
+        void Run();
         void EnqueueForExecution(IMainThreadAction action);
-        Task AwaitExecution(IMainThreadAction action);
-        Task<T> AwaitExecution<T>(IMainThreadFunc<T> func);
+        Task Await(IMainThreadAction action);
+        Task<T> Await<T>(IMainThreadFunc<T> func);
     }
 }

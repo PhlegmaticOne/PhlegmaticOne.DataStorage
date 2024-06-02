@@ -1,18 +1,24 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using PhlegmaticOne.DataStorage.Contracts;
 using PhlegmaticOne.DataStorage.Storage.Base;
 using PhlegmaticOne.DataStorage.Storage.Queue.Base;
 
 namespace PhlegmaticOne.DataStorage.Storage.Queue.Operations
 {
-    public class QueueOperationDeleteState<T> : IQueueOperation where T : class, IModel
+    internal sealed class QueueOperationDeleteState<T> : IQueueOperation where T : class, IModel
     {
         private readonly IDataStorage _dataStorage;
-        public QueueOperationDeleteState(IDataStorage dataStorage) => _dataStorage = dataStorage;
-        public string OperationMessage => $"Deleting {typeof(T)}";
+        private readonly string _key;
 
-        public Task ExecuteAsync(CancellationToken cancellationToken = default) =>
-            _dataStorage.DeleteAsync<T>(cancellationToken);
+        public QueueOperationDeleteState(IDataStorage dataStorage, string key)
+        {
+            _dataStorage = dataStorage;
+            _key = key;
+        }
+
+        public Task ExecuteAsync()
+        {
+            return _dataStorage.DeleteAsync<T>(_key);
+        }
     }
 }

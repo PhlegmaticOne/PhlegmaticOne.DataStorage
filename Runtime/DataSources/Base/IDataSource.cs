@@ -10,8 +10,8 @@ namespace PhlegmaticOne.DataStorage.DataSources.Base
 
     public interface IDataSource<T> : IDataSource where T : class, IModel
     {
-        Task<T> ReadAsync(CancellationToken cancellationToken = default);
-        Task WriteAsync(T value, CancellationToken cancellationToken = default);
-        Task DeleteAsync(CancellationToken cancellationToken = default);
+        Task<T> ReadAsync(string key, CancellationToken cancellationToken = default);
+        Task WriteAsync(string key, T value, CancellationToken cancellationToken = default);
+        Task DeleteAsync(string key, CancellationToken cancellationToken = default);
     }
 }

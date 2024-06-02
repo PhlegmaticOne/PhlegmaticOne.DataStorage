@@ -4,8 +4,7 @@ namespace PhlegmaticOne.DataStorage.Infrastructure.Cancellation
 {
     public interface IDataStorageCancellationProvider
     {
-        CancellationToken InternalToken { get; }
-        CancellationLinkEntry LinkWith(CancellationToken externalToken = default);
+        CancellationToken Token { get; }
         void Cancel();
     }
 }

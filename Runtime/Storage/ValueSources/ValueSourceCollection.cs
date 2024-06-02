@@ -1,22 +1,26 @@
 ﻿using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using PhlegmaticOne.DataStorage.Contracts;
 
 namespace PhlegmaticOne.DataStorage.Storage.ValueSources
 {
-    public class ValueSourceCollection : IEnumerable<KeyValuePair<string, IValueSource>>
+    internal sealed class ValueSourceCollection : IEnumerable<KeyValuePair<string, IValueSource>>
     {
         private readonly ConcurrentDictionary<string, IValueSource> _valueSources;
-        public ValueSourceCollection() => _valueSources = new ConcurrentDictionary<string, IValueSource>();
-
-        public IEnumerator<KeyValuePair<string, IValueSource>> GetEnumerator() => _valueSources.GetEnumerator();
-
-        IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable) _valueSources).GetEnumerator();
-        public void Add<T>(IValueSource<T> valueSource) => _valueSources.TryAdd(Key<T>(), valueSource);
-
-        public bool TryGet<T>(out IValueSource<T> valueSource)
+        public ValueSourceCollection()
         {
-            if (_valueSources.TryGetValue(Key<T>(), out var result))
+            _valueSources = new ConcurrentDictionary<string, IValueSource>();
+        }
+
+        public void Add<T>(string key, IValueSource<T> valueSource) where T : IModel, new()
+        {
+            _valueSources.TryAdd(key, valueSource);
+        }
+
+        public bool TryGet<T>(string key, out IValueSource<T> valueSource) where T : IModel, new()
+        {
+            if (_valueSources.TryGetValue(key, out var result))
             {
                 valueSource = (IValueSource<T>) result;
                 return true;
@@ -25,7 +29,15 @@ namespace PhlegmaticOne.DataStorage.Storage.ValueSources
             valueSource = default;
             return false;
         }
+        
+        public IEnumerator<KeyValuePair<string, IValueSource>> GetEnumerator()
+        {
+            return _valueSources.GetEnumerator();
+        }
 
-        private static string Key<T>() => typeof(T).Name;
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return ((IEnumerable)_valueSources).GetEnumerator();
+        }
     }
 }

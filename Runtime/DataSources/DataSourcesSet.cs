@@ -6,7 +6,7 @@ using PhlegmaticOne.DataStorage.Infrastructure.Helpers;
 
 namespace PhlegmaticOne.DataStorage.DataSources
 {
-    public class DataSourcesSet
+    internal sealed class DataSourcesSet
     {
         private readonly IDataSourceFactory _dataSourceFactory;
         private readonly DataSourceFactoryContext _factoryContext;

@@ -9,18 +9,8 @@ namespace SimpleUsage.Coins.Models
     [DataContract]
     public class CoinsState : IModel
     {
-        [JsonProperty] [DataMember] private int _coins;
-
-        [JsonConstructor]
-        public CoinsState(int coins) => _coins = coins;
-
-        public static CoinsState Initial => new CoinsState(0);
-
-        [JsonIgnore]
-        public int Coins
-        {
-            get => _coins;
-            set => _coins = value;
-        }
+        [JsonProperty]
+        [DataMember]
+        public int Coins { get; set; }
     }
 }

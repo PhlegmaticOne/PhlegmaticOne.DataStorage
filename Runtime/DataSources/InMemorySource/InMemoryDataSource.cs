@@ -1,26 +1,35 @@
-﻿using System.Threading;
+﻿using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using PhlegmaticOne.DataStorage.Contracts;
 using PhlegmaticOne.DataStorage.DataSources.Base;
 
 namespace PhlegmaticOne.DataStorage.DataSources.InMemorySource
 {
-    public class InMemoryDataSource<T> : IDataSource<T> where T : class, IModel
+    internal sealed class InMemoryDataSource<T> : IDataSource<T> where T : class, IModel
     {
-        private T _inMemoryValue;
+        private readonly Dictionary<string, T> _values;
 
-        public Task WriteAsync(T value, CancellationToken cancellationToken = default)
+        public InMemoryDataSource()
         {
-            _inMemoryValue = value;
+            _values = new Dictionary<string, T>();
+        }
+
+        public Task WriteAsync(string key, T value, CancellationToken cancellationToken = default)
+        {
+            _values[key] = value;
             return Task.CompletedTask;
         }
 
-        public Task DeleteAsync(CancellationToken cancellationToken = default)
+        public Task DeleteAsync(string key, CancellationToken cancellationToken = default)
         {
-            _inMemoryValue = default;
+            _values.Remove(key);
             return Task.CompletedTask;
         }
 
-        public Task<T> ReadAsync(CancellationToken cancellationToken = default) => Task.FromResult(_inMemoryValue);
+        public Task<T> ReadAsync(string key, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(_values.GetValueOrDefault(key));
+        }
     }
 }

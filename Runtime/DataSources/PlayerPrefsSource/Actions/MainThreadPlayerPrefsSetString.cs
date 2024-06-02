@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace PhlegmaticOne.DataStorage.DataSources.PlayerPrefsSource.Actions
 {
-    public class MainThreadPlayerPrefsSetString : IMainThreadAction
+    internal sealed class MainThreadPlayerPrefsSetString : IMainThreadAction
     {
         private readonly string _key;
         private readonly string _value;
@@ -14,6 +14,9 @@ namespace PhlegmaticOne.DataStorage.DataSources.PlayerPrefsSource.Actions
             _value = value;
         }
 
-        public void Execute() => PlayerPrefs.SetString(_key, _value);
+        public void Execute()
+        {
+            PlayerPrefs.SetString(_key, _value);
+        }
     }
 }

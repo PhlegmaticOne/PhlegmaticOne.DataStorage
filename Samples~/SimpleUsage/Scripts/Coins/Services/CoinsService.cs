@@ -8,19 +8,21 @@ namespace SimpleUsage.Coins.Services
     {
         private readonly IValueSource<CoinsState> _coinsState;
 
-        public CoinsService(IValueSource<CoinsState> coinsState) => _coinsState = coinsState;
-
-        public async Task InitializeAsync()
+        public CoinsService(IValueSource<CoinsState> coinsState)
         {
-            await _coinsState.InitializeAsync();
-
-            if (_coinsState.HasNoValue())
-            {
-                _coinsState.SetRawValue(CoinsState.Initial);
-            }
+            _coinsState = coinsState;
         }
 
         public int Coins => _coinsState.Value.Coins;
-        public void ChangeCoins(int delta) => _coinsState.TrackableValue.Coins += delta;
+
+        public Task InitializeAsync()
+        {
+            return _coinsState.EnsureInitializedAsync();
+        }
+
+        public void ChangeCoins(int delta)
+        {
+            _coinsState.TrackableValue.Coins += delta;
+        }
     }
 }

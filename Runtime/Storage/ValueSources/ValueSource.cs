@@ -5,22 +5,20 @@ using PhlegmaticOne.DataStorage.Storage.Base;
 
 namespace PhlegmaticOne.DataStorage.Storage.ValueSources
 {
-    public class ValueSource<T> : IValueSource<T> where T : class, IModel
+    internal sealed class ValueSource<T> : IValueSource<T> where T : class, IModel, new()
     {
         private readonly IDataStorage _dataStorage;
-        private readonly SemaphoreSlim _semaphore;
 
         private int _trackedChanges;
 
-        public ValueSource(IDataStorage dataStorage)
+        public ValueSource(IDataStorage dataStorage, string key)
         {
+            Key = key;
             _dataStorage = dataStorage;
-            _semaphore = new SemaphoreSlim(1, 1);
         }
 
+        public string Key { get; }
         public int TrackedChanges => _trackedChanges;
-        public string DisplayName => typeof(T).Name;
-
         public T TrackableValue
         {
             get
@@ -38,26 +36,36 @@ namespace PhlegmaticOne.DataStorage.Storage.ValueSources
             IncrementTrackedChanges();
         }
 
-        public async Task InitializeAsync(CancellationToken cancellationToken = default)
+        public async Task InitializeAsync()
         {
-            await _semaphore.WaitAsync(cancellationToken);
-            Value ??= await _dataStorage.ReadAsync<T>(cancellationToken);
-            _semaphore.Release();
+            Value ??= await _dataStorage.ReadAsync<T>(Key);
         }
 
-        public void EnqueueForSaving(CancellationToken cancellationToken = default)
+        public void EnqueueSave()
         {
-            _dataStorage.EnqueueForSaving(this, cancellationToken);
+            _dataStorage.EnqueueSave(Key, Value);
             ResetTrackedChanges();
         }
 
-        public void EnqueueForDeleting(CancellationToken cancellationToken = default)
+        public void EnqueueDelete()
         {
-            _dataStorage.EnqueueForDeleting<T>(cancellationToken);
+            _dataStorage.EnqueueDelete<T>(Key);
             ResetTrackedChanges();
         }
 
-        private void IncrementTrackedChanges() => Interlocked.Increment(ref _trackedChanges);
-        private void ResetTrackedChanges() => Interlocked.Exchange(ref _trackedChanges, 0);
+        private void IncrementTrackedChanges()
+        {
+            Interlocked.Increment(ref _trackedChanges);
+        }
+
+        private void ResetTrackedChanges()
+        {
+            Interlocked.Exchange(ref _trackedChanges, 0);
+        }
+
+        public override string ToString()
+        {
+            return typeof(T).Name;
+        }
     }
 }
